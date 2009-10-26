@@ -15,12 +15,18 @@ env = conf.Finish()
 
 env.Append( CPPPATH = ['src'] )
 env.Append( CXXFLAGS = ' -Wall -Wextra' )
-env.Append( LIBS=['rt', 'boost_system-mt'] )
+env.Append( LIBS=['boost_system'] )
+
+platform = os.uname()[0]
+if platform != 'Darwin':
+    env.Append( LIBS=['rt'] )
 
 if debug:
     env.Append( CXXFLAGS = ' -g3 -ggdb -O0' )
 else:
-    env.Append( CXXFLAGS = ' -O3 -march=native -finline-limit=800 -DNDEBUG' )
+    env.Append( CXXFLAGS = ' -O3 -finline-limit=800 -DNDEBUG' )
+    if platform != 'Darwin':
+        env.Append( CXXFLAGS = ' -march=native' )
 
 env.Program( 'distmapServer', 
              Glob( 'src/distmap/*.cpp' ) + 

@@ -8,9 +8,7 @@
 #ifndef TIMER_HPP_
 #define TIMER_HPP_
 
-#include <features.h>
-
-#if _POSIX_C_SOURCE >= 199309L
+#if !defined(__APPLE__) && _POSIX_C_SOURCE >= 199309L
 
 // Use high-precision clock when available
 
