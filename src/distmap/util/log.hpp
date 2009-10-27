@@ -24,6 +24,7 @@
 #define INFO(msg)  LOG("INFO ", msg)
 #define WARN(msg)  LOG("WARN ", msg)
 #define ERROR(msg) LOG("ERROR", msg)
+#define FATAL(msg) { LOG("FATAL", msg); abort(); }
 
 class LogTimestamp
 {

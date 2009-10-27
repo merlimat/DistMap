@@ -10,6 +10,11 @@
 
 #include <distmap/asio.hpp>
 
+#include <distmap/finder.hpp>
+
+namespace distmap {
+
+
 class Membership
 {
 public:
@@ -18,6 +23,9 @@ public:
 
 private:
     asio::io_service& m_service;
+    Finder m_finder;
 };
+
+}  // namespace distmap
 
 #endif /* MEMBERSHIP_HPP_ */

@@ -13,9 +13,11 @@ conf = Configure(env)
 #    Exit(1)
 env = conf.Finish()
 
-env.Append( CPPPATH = ['src'] )
+env.Append( CPPPATH = ['src', 'include'] )
 env.Append( CXXFLAGS = ' -Wall -Wextra' )
 env.Append( LIBS=['boost_system'] )
+
+env.Append( CPPFLAGS = ' -DBOOST_DISABLE_THREADS' )
 
 platform = os.uname()[0]
 if platform != 'Darwin':
@@ -24,7 +26,8 @@ if platform != 'Darwin':
 if debug:
     env.Append( CXXFLAGS = ' -g3 -ggdb -O0' )
 else:
-    env.Append( CXXFLAGS = ' -O3 -finline-limit=800 -DNDEBUG' )
+    env.Append( CXXFLAGS = ' -O3 -finline-limit=800' )
+    env.Append( CPPFLAGS = ' -DNDEBUG' )
     if platform != 'Darwin':
         env.Append( CXXFLAGS = ' -march=native' )
 

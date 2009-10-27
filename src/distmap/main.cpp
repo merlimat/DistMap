@@ -6,9 +6,9 @@ int main()
 {
     INFO( "Started Distmap Server" );
 
-    asio::io_service service;
+    distmap::asio::io_service service;
 
-    Membership m( service );
+    distmap::Membership m( service );
 
     service.run();
 
