@@ -15,7 +15,6 @@ env = conf.Finish()
 
 env.Append( CPPPATH = ['src', 'include'] )
 env.Append( CXXFLAGS = ' -Wall -Wextra' )
-env.Append( LIBS=['boost_system'] )
 
 env.Append( CPPFLAGS = ' -DBOOST_DISABLE_THREADS' )
 
@@ -31,10 +30,11 @@ else:
     if platform != 'Darwin':
         env.Append( CXXFLAGS = ' -march=native' )
 
-env.Program( 'distmapServer', 
-             Glob( 'src/distmap/*.cpp' ) + 
+env.Program( 'distmapServer',
+             Glob( 'src/boost_lib/*.cpp' ) + 
+             Glob( 'src/distmap/*.cpp' ) +
              Glob( 'src/distmap/util/*.cpp' )
-             )
+           )
 
 
     
