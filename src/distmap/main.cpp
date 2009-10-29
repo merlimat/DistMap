@@ -1,15 +1,22 @@
+
+#include <distmap/configuration.hpp>
+#include <distmap/membership.hpp>
+#include <distmap/server.hpp>
 #include <distmap/util/log.hpp>
 
-#include <distmap/membership.hpp>
+#include <google/utilities.h>
+
+using namespace distmap;
 
 int main()
 {
+    asio::io_service service;
+    Configuration conf( service );
+
+    Membership membership( service, conf );
+    Server server( service, conf, membership );
+
     INFO( "Started Distmap Server" );
-
-    distmap::asio::io_service service;
-
-    distmap::Membership m( service );
-
     service.run();
 
     return 0;

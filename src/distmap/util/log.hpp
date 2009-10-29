@@ -12,19 +12,30 @@
 #include <iostream>
 #include <iomanip>
 #include <cstring>
+#include <cassert>
+
+#include <google/utilities.h>
 
 #ifndef NDEBUG
 #  define DEBUG(msg)  LOG("DEBUG", msg)
 #  define TRACE(msg)  LOG("TRACE", msg)
+#  define ASSERT(condition)  { \
+    if ( ! (condition) ) \
+        FATAL( "Assert failed: " #condition ); \
+}
 #else
 #  define DEBUG(msg) {}
 #  define TRACE(msg)  {}
+#  define ASSERT(condition)  {}
 #endif
 
 #define INFO(msg)  LOG("INFO ", msg)
 #define WARN(msg)  LOG("WARN ", msg)
 #define ERROR(msg) LOG("ERROR", msg)
-#define FATAL(msg) { LOG("FATAL", msg); abort(); }
+#define FATAL(msg) { LOG("FATAL", msg << std::endl << " ======= STACK TRACE ======= " ); \
+                     google::DumpStackTraceAndExit(); }
+
+#define CHECK(condition) { if (!condition) WARN( "Failed check: " #condition ); }
 
 class LogTimestamp
 {

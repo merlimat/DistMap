@@ -12,20 +12,38 @@
 
 #include <distmap/finder.hpp>
 
-namespace distmap {
+namespace distmap
+{
 
+class Configuration;
 
 class Membership
 {
 public:
-    Membership( asio::io_service& service );
+    Membership( asio::io_service& service, Configuration& conf );
     ~Membership();
 
+    const std::string& selfNode();
+
+    void setNodeName( const std::string& nodeName )
+    {
+        m_node = nodeName;
+    }
+
+    void announce();
+
 private:
+    void announceTimeout( const sys::error_code& );
+
     asio::io_service& m_service;
+    Configuration& m_conf;
     Finder m_finder;
+
+    asio::deadline_timer m_announceTimer;
+
+    std::string m_node;
 };
 
-}  // namespace distmap
+} // namespace distmap
 
 #endif /* MEMBERSHIP_HPP_ */

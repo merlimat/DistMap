@@ -31,7 +31,8 @@ else:
         env.Append( CXXFLAGS = ' -march=native' )
 
 env.Program( 'distmapServer',
-             Glob( 'src/boost_lib/*.cpp' ) + 
+             Glob( 'src/boost_lib/*.cpp' ) +
+             Glob( 'src/google/*.cc' ) + 
              Glob( 'src/distmap/*.cpp' ) +
              Glob( 'src/distmap/util/*.cpp' )
            )

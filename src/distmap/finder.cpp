@@ -11,6 +11,7 @@
 
 #include <time.h>
 #include <unistd.h>
+#include <google/utilities.h>
 
 namespace distmap
 {
@@ -18,6 +19,16 @@ namespace distmap
 FinderCommand::FinderCommand( Type type, const std::string& node ) :
     m_type( type ), m_node( node )
 {
+}
+
+size_t FinderCommand::serialize( char* buffer, size_t size )
+{
+    buffer[0] = m_type;
+    CHECK( size > m_node.length() );
+    size_t n = std::min( size - 1, m_node.length() );
+    TRACE( "size: " << size << " -- length: " << m_node.length() << " -- n: " << n );
+    strncpy( buffer + 1, m_node.c_str(), n );
+    return n + 1;
 }
 
 FinderCommand::FinderCommand FinderCommand::parse( const char* buffer,
@@ -55,10 +66,6 @@ Finder::Finder( asio::io_service& service, Membership& membership ) :
 
     // Join the multicast group.
     m_socket.set_option( ip::multicast::join_group( multicastAddr ) );
-
-    m_socket.async_receive_from( asio::buffer( m_receiveBuffer ),
-            m_senderEndpoint, bind( &Finder::handleReceiveFrom, this,
-                    ph::error, ph::bytes_transferred ) );
 }
 
 Finder::~Finder()
@@ -66,20 +73,42 @@ Finder::~Finder()
     TRACE( "Finder::~Finder" );
 }
 
-void Finder::handleReceiveFrom( const sys::error_code& error, size_t size )
+void Finder::receiveMessage()
 {
-    TRACE( "Finder::handleReceiveFrom. error=" << error << " size=" << size );
-    TRACE( "Sender endpoint: " << m_senderEndpoint );
+    m_socket.async_receive_from( asio::buffer( m_receiveBuffer ),
+            m_senderEndpoint, bind( &Finder::handleReceiveFrom, this,
+                    ph::error, ph::bytes_transferred ) );
 }
 
-ip::address Finder::discoverExternalIP()
+void Finder::handleReceiveFrom( const sys::error_code& error, size_t size )
 {
-    TRACE( "Multicast address: " << m_multicastEndpoint );
-    udp::socket socket( m_service );
-    socket.connect( m_multicastEndpoint );
-    udp::endpoint endpoint = socket.local_endpoint();
-    DEBUG( "Local address is: " << endpoint.address() );
-    return endpoint.address();
+    TRACE( "Finder::handleReceiveFrom. error=" << error.message() << " size=" << size );
+    TRACE( "Sender endpoint: " << m_senderEndpoint );
+
+    receiveMessage();
+}
+
+void Finder::announceMyself( const std::string& nodeName )
+{
+    FinderCommand cmd( FinderCommand::Announce, nodeName );
+
+    FinderBufferPtr data( new FinderBuffer() );
+    size_t size = cmd.serialize( data->c_array(), data->size() );
+    TRACE( "announce message sent. size=" << size );
+    m_socket.async_send_to( asio::buffer( data->data(), size ),
+            m_multicastEndpoint, bind( &Finder::handleMsgSent, this, data,
+                    ph::error, ph::bytes_transferred ) );
+}
+
+void Finder::nodeIsDown( const std::string& )
+{
+}
+
+void Finder::handleMsgSent( FinderBufferPtr,
+                            const sys::error_code& error,
+                            size_t size )
+{
+    TRACE( "Msg sent. error='" << error.message() << "' size=" << size );
 }
 
 }
