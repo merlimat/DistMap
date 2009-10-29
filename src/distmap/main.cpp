@@ -32,5 +32,7 @@ int main()
     INFO( "Started Distmap Server" );
     service.run();
 
+    INFO( "Stopped Distmap Server" );
+
     return 0;
 }

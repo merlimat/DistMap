@@ -92,21 +92,19 @@ void Finder::announceMyself( const std::string& nodeName )
 {
     FinderCommand cmd( FinderCommand::Announce, nodeName );
 
-    FinderBufferPtr data( new FinderBuffer() );
-    size_t size = cmd.serialize( data->c_array(), data->size() );
+    SharedBuffer buffer( 1024 );
+    size_t size = cmd.serialize( buffer.data(), buffer.size() );
+    buffer.resize( size );
     TRACE( "announce message sent. size=" << size );
-    m_socket.async_send_to( asio::buffer( data->data(), size ),
-            m_multicastEndpoint, bind( &Finder::handleMsgSent, this, data,
-                    ph::error, ph::bytes_transferred ) );
+    m_socket.async_send_to( buffer, m_multicastEndpoint, bind(
+            &Finder::handleMsgSent, this, ph::error, ph::bytes_transferred ) );
 }
 
 void Finder::nodeIsDown( const std::string& )
 {
 }
 
-void Finder::handleMsgSent( FinderBufferPtr,
-                            const sys::error_code& error,
-                            size_t size )
+void Finder::handleMsgSent( const sys::error_code& error, size_t size )
 {
     TRACE( "Msg sent. error='" << error.message() << "' size=" << size );
 }

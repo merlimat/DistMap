@@ -30,8 +30,7 @@ namespace sys = boost::system;
 
 namespace ptime = boost::posix_time;
 
-
-template <typename T>
+template<typename T>
 class IntrusiveBase
 {
     uint32_t m_counter;
@@ -43,7 +42,7 @@ public:
 
     boost::intrusive_ptr<T> ptr()
     {
-        return boost::intrusive_ptr<T>( static_cast<T*>( this ) );
+        return boost::intrusive_ptr<T>( static_cast<T*> ( this ) );
     }
 
     friend inline void intrusive_ptr_add_ref( IntrusiveBase<T>* p )
@@ -56,11 +55,67 @@ public:
         p->m_counter--;
         if ( p->m_counter == 0 )
         {
-            delete static_cast<T*>( p );
+            delete static_cast<T*> ( p );
         }
     }
 };
 
+class InternalSharedBuffer: public std::vector<char>, public IntrusiveBase<
+        InternalSharedBuffer>
+{
+public:
+    InternalSharedBuffer( size_t size ) :
+        std::vector<char>( size )
+    {
+    }
+
+    friend class SharedBuffer;
+};
+
+typedef boost::intrusive_ptr<InternalSharedBuffer> InternalSharedBufferPtr;
+
+class SharedBuffer
+{
+public:
+    SharedBuffer( size_t size ) :
+        m_data( new InternalSharedBuffer( size ) ), m_buffer( asio::buffer(
+                *m_data ) )
+    {
+    }
+
+    // Implement the ConstBufferSequence requirements.
+    typedef asio::const_buffer value_type;
+    typedef const asio::const_buffer* const_iterator;
+
+    const asio::const_buffer* begin() const
+    {
+        return &m_buffer;
+    }
+
+    const asio::const_buffer* end() const
+    {
+        return &m_buffer + 1;
+    }
+
+    char* data()
+    {
+        return & (*m_data)[0];
+    }
+
+    size_t size()
+    {
+        return m_data->size();
+    }
+
+    void resize( size_t newSize )
+    {
+        m_data->resize( newSize );
+    }
+
+private:
+    InternalSharedBufferPtr m_data;
+    asio::const_buffer m_buffer;
+};
 
 }
 

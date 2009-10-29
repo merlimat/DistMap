@@ -55,14 +55,9 @@ public:
     void nodeIsDown( const std::string& nodeName );
 
 private:
-    typedef boost::array<char, 1024> FinderBuffer;
-    typedef boost::shared_ptr<FinderBuffer> FinderBufferPtr;
-
     void receiveMessage();
     void handleReceiveFrom( const sys::error_code& error, size_t size );
-    void handleMsgSent( FinderBufferPtr data,
-                        const sys::error_code& error,
-                        size_t size );
+    void handleMsgSent( const sys::error_code& error, size_t size );
 
     asio::io_service& m_service;
     Membership& m_membership;
@@ -71,7 +66,7 @@ private:
     udp::endpoint m_senderEndpoint;
     udp::endpoint m_multicastEndpoint;
 
-    FinderBuffer m_receiveBuffer;
+    boost::array<char,1024> m_receiveBuffer;
 };
 
 }
