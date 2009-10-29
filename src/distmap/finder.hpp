@@ -33,7 +33,7 @@ public:
         return m_node;
     }
 
-    size_t serialize( char* buffer, size_t size );
+    SharedBuffer serialize();
     static FinderCommand parse( const char* buffer, size_t size );
 
 private:

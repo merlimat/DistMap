@@ -21,14 +21,14 @@ FinderCommand::FinderCommand( Type type, const std::string& node ) :
 {
 }
 
-size_t FinderCommand::serialize( char* buffer, size_t size )
+SharedBuffer FinderCommand::serialize()
 {
-    buffer[0] = m_type;
-    CHECK( size > m_node.length() );
-    size_t n = std::min( size - 1, m_node.length() );
-    TRACE( "size: " << size << " -- length: " << m_node.length() << " -- n: " << n );
-    strncpy( buffer + 1, m_node.c_str(), n );
-    return n + 1;
+    size_t size = m_node.length() + 1;
+    SharedBuffer buffer( size );
+    char* ptr = buffer.data();
+    ptr[0] = m_type;
+    strncpy( ptr + 1, m_node.c_str(), size-1 );
+    return buffer;
 }
 
 FinderCommand::FinderCommand FinderCommand::parse( const char* buffer,
@@ -92,10 +92,8 @@ void Finder::announceMyself( const std::string& nodeName )
 {
     FinderCommand cmd( FinderCommand::Announce, nodeName );
 
-    SharedBuffer buffer( 1024 );
-    size_t size = cmd.serialize( buffer.data(), buffer.size() );
-    buffer.resize( size );
-    TRACE( "announce message sent. size=" << size );
+    SharedBuffer buffer = cmd.serialize();
+    TRACE( "announce message sent. size=" << buffer.size() );
     m_socket.async_send_to( buffer, m_multicastEndpoint, bind(
             &Finder::handleMsgSent, this, ph::error, ph::bytes_transferred ) );
 }
