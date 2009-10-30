@@ -24,6 +24,7 @@ if platform != 'Darwin':
 
 if debug:
     env.Append( CXXFLAGS = ' -g3 -ggdb -O0' )
+    env.Append( CPPFLAGS = ' -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING' )
 else:
     env.Append( CXXFLAGS = ' -O3 -finline-limit=800' )
     env.Append( CPPFLAGS = ' -DNDEBUG' )

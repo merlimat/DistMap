@@ -4,30 +4,30 @@
 #include <distmap/util/log.hpp>
 #include <signal.h>
 
+#include <distmap/connection_pool.hpp>
+
 #include <google/utilities.h>
 
 using namespace distmap;
 
-asio::io_service* s_serviceRef = NULL;
+asio::io_service service;
 
 void signalHandler( int signo )
 {
     INFO( "signal #" << signo << " received" );
-    s_serviceRef->stop();
+    service.stop();
 }
 
 int main()
 {
-    asio::io_service service;
-    s_serviceRef = &service;
-
     signal( SIGINT, signalHandler );
     signal( SIGQUIT, signalHandler );
 
+    ConnectionPool connectionPool( service );
     Configuration conf( service );
 
-    Membership membership( service, conf );
-    Server server( service, conf, membership );
+    Membership membership( service, conf, connectionPool );
+    Server server( service, conf, membership, connectionPool );
 
     INFO( "Started Distmap Server" );
     service.run();

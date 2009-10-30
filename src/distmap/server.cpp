@@ -17,9 +17,10 @@ namespace distmap
 
 Server::Server( asio::io_service& service,
                 Configuration& conf,
-                Membership& membership ) :
+                Membership& membership,
+                ConnectionPool& connectionPool ) :
     m_service( service ), m_conf( conf ), m_membership( membership ),
-            m_acceptor( service )
+            m_connectionPool( connectionPool ), m_acceptor( service )
 {
     TRACE( "Server::Server()" );
 
@@ -72,6 +73,11 @@ void Server::bindAddress()
         ERROR( "Failed to bind to address: "
                 << tcp::endpoint( m_conf.listenIP(), port-1)
                 << " : " << ec.message() );
+    }
+    else
+    {
+        m_conf.setListenEndpoint( m_acceptor.local_endpoint().address(),
+                m_acceptor.local_endpoint().port() );
     }
 }
 

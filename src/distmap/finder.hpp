@@ -43,12 +43,15 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class Configuration;
 class Membership;
 
 class Finder
 {
 public:
-    Finder( asio::io_service& service, Membership& membership );
+    Finder( asio::io_service& service,
+            Membership& membership,
+            Configuration& conf );
     ~Finder();
 
     void announceMyself( const std::string& nodeName );
@@ -66,7 +69,7 @@ private:
     udp::endpoint m_senderEndpoint;
     udp::endpoint m_multicastEndpoint;
 
-    boost::array<char,1024> m_receiveBuffer;
+    boost::array<char, 1024> m_receiveBuffer;
 };
 
 }

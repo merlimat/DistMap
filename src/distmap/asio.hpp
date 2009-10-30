@@ -14,6 +14,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/smart_ptr.hpp>
 #include <boost/function.hpp>
+#include <boost/noncopyable.hpp>
 
 namespace distmap
 {
@@ -84,22 +85,23 @@ public:
     }
 
     // Implement the ConstBufferSequence requirements.
-    typedef asio::const_buffer value_type;
-    typedef const asio::const_buffer* const_iterator;
+    typedef asio::mutable_buffer value_type;
+    typedef asio::mutable_buffer* iterator;
+    typedef const asio::mutable_buffer* const_iterator;
 
-    const asio::const_buffer* begin() const
+    const asio::mutable_buffer* begin() const
     {
         return &m_buffer;
     }
 
-    const asio::const_buffer* end() const
+    const asio::mutable_buffer* end() const
     {
         return &m_buffer + 1;
     }
 
     char* data()
     {
-        return & (*m_data)[0];
+        return &(*m_data)[0];
     }
 
     size_t size()
@@ -114,7 +116,7 @@ public:
 
 private:
     InternalSharedBufferPtr m_data;
-    asio::const_buffer m_buffer;
+    asio::mutable_buffer m_buffer;
 };
 
 }

@@ -14,7 +14,7 @@
 namespace distmap
 {
 
-class Configuration
+class Configuration : public boost::noncopyable
 {
 public:
     Configuration( asio::io_service& service );
@@ -49,6 +49,11 @@ public:
     {
         m_listenIP = addr;
         m_listenPort = port;
+    }
+
+    udp::endpoint udpEndpoint() const
+    {
+        return udp::endpoint( m_listenIP, m_listenPort );
     }
 
 private:

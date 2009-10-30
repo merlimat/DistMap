@@ -7,6 +7,8 @@
 
 #include "finder.hpp"
 
+#include <distmap/configuration.hpp>
+#include <distmap/membership.hpp>
 #include <distmap/util/log.hpp>
 
 #include <time.h>
@@ -27,7 +29,7 @@ SharedBuffer FinderCommand::serialize()
     SharedBuffer buffer( size );
     char* ptr = buffer.data();
     ptr[0] = m_type;
-    strncpy( ptr + 1, m_node.c_str(), size-1 );
+    strncpy( ptr + 1, m_node.c_str(), size - 1 );
     return buffer;
 }
 
@@ -47,25 +49,25 @@ FinderCommand::FinderCommand FinderCommand::parse( const char* buffer,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Finder::Finder( asio::io_service& service, Membership& membership ) :
+Finder::Finder( asio::io_service& service,
+                Membership& membership,
+                Configuration& conf ) :
     m_service( service ), m_membership( membership ), m_socket( service ),
             m_senderEndpoint()
 {
     TRACE( "Finder::Finder" );
+    m_multicastEndpoint = conf.multicastChannel();
+    udp::endpoint listenEndpoint( ip::address_v4::any(), conf.multicastChannel().port() );
 
-    ip::address listenerAddr = ip::address::from_string( "0.0.0.0" );
-    ip::address multicastAddr = ip::address::from_string( "226.0.0.1" );
-    const uint16_t port = 20000;
-
-    m_multicastEndpoint = udp::endpoint( multicastAddr, port );
-
-    udp::endpoint listenEndpoint( listenerAddr, port );
     m_socket.open( listenEndpoint.protocol() );
     m_socket.set_option( udp::socket::reuse_address( true ) );
     m_socket.bind( listenEndpoint );
 
     // Join the multicast group.
-    m_socket.set_option( ip::multicast::join_group( multicastAddr ) );
+    m_socket.set_option( ip::multicast::join_group( m_multicastEndpoint.address() ) );
+
+    TRACE( "UDP listen address: " << listenEndpoint );
+    receiveMessage();
 }
 
 Finder::~Finder()
@@ -83,7 +85,20 @@ void Finder::receiveMessage()
 void Finder::handleReceiveFrom( const sys::error_code& error, size_t size )
 {
     TRACE( "Finder::handleReceiveFrom. error=" << error.message() << " size=" << size );
-    TRACE( "Sender endpoint: " << m_senderEndpoint );
+    if ( ! error )
+    {
+        FinderCommand cmd = FinderCommand::parse( m_receiveBuffer.data(), size );
+        switch ( cmd.type() )
+        {
+        case FinderCommand::Announce:
+            m_membership.receivedAnnounce( cmd.node() );
+            break;
+
+        default:
+            WARN( "Invalid message received from multicast channel." );
+            break;
+        }
+    }
 
     receiveMessage();
 }
