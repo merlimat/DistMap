@@ -40,8 +40,10 @@ void Membership::announce()
 void Membership::receivedAnnounce( const std::string& nodeName )
 {
     if ( nodeName == m_node )
-        // Ignore self messages
+    {
+        TRACE( "Ignore self message" );
         return;
+    }
 
     INFO( "New node announced: " << nodeName );
     // Say hello to node..

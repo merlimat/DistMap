@@ -23,31 +23,44 @@ ConnectionPool::~ConnectionPool()
     TRACE( "ConnectionPool::~ConnectionPool" );
 }
 
-void ConnectionPool::connect( const std::string& nodeName,
-                              const ClientConnectionCallback& callback )
+void ConnectionPool::send( const std::string& node,
+                           SharedBuffer& msg,
+                           const SendCallback& callback )
 {
-    size_t idx = nodeName.find( ':' );
-    std::string ipAddress = nodeName.substr( 0, idx );
-    uint16_t port = atoi( nodeName.substr( idx + 1 ).c_str() );
-    TRACE( "ClientConnection " << ipAddress << ':' << port );
-    tcp::endpoint
-            endpoint( ip::address::from_string( ipAddress.c_str() ), port );
-
+    tcp::endpoint endpoint = getEndpointAddress( node );
     ClientConnectionPtr cnx( new ClientConnection( m_service ) );
-    cnx->connect( endpoint, bind( &ConnectionPool::handleConnect, this, cnx,
+    cnx->connect( endpoint, bind( &ConnectionPool::handleConnect, this, cnx, msg,
             callback, ph::error ) );
 }
 
-void ConnectionPool::handleConnect( const ClientConnectionPtr& cnx,
-                                    const ClientConnectionCallback& callback,
-                                    const sys::error_code& error )
+void ConnectionPool::sendAndReceive( const std::string& node,
+                                     const SharedBuffer& msg,
+                                     const SendReceiveCallback& )
 {
-    callback( error, cnx );
 }
 
-void ConnectionPool::release( const ClientConnectionPtr& cnx )
+void ConnectionPool::handleConnect( const ClientConnectionPtr& cnx,
+                                    SharedBuffer& msg,
+                                    const SendCallback& callback,
+                                    const sys::error_code& error )
 {
-    DEBUG( "Release connection to " << cnx->socket().remote_endpoint() );
+    if ( error )
+    {
+        DEBUG( "Error connecting to " << cnx->socket().remote_endpoint() );
+        callback( error );
+        return;
+    }
+
+    cnx->send( msg, callback );
+}
+
+tcp::endpoint ConnectionPool::getEndpointAddress( const std::string& node ) const
+{
+    size_t idx = node.find( ':' );
+    std::string ipAddress = node.substr( 0, idx );
+    uint16_t port = atoi( node.substr( idx + 1 ).c_str() );
+    TRACE( "ClientConnection " << ipAddress << ':' << port );
+    return tcp::endpoint( ip::address::from_string( ipAddress.c_str() ), port );
 }
 
 }
