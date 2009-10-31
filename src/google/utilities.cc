@@ -39,9 +39,9 @@
 # include <sys/time.h>
 #endif
 #include <time.h>
-#if defined(HAVE_SYSCALL_H)
+#if defined(HAVE_SYSCALL_H) && !defined(__APPLE__)
 #include <syscall.h>                 // for syscall()
-#elif defined(HAVE_SYS_SYSCALL_H)
+#elif defined(HAVE_SYS_SYSCALL_H) || defined(__APPLE__)
 #include <sys/syscall.h>                 // for syscall()
 #endif
 
@@ -110,12 +110,14 @@ static void DumpPC(DebugWriter *writerfn, void *arg, void *pc,
 
 // Dump current stack trace as directed by writerfn
 static void DumpStackTrace(int skip_count, DebugWriter *writerfn, void *arg) {
+#ifndef __APPLE__
   // Print stack trace
   void* stack[32];
   int depth = GetStackTrace(stack, ARRAYSIZE(stack), skip_count+1);
   for (int i = 0; i < depth; i++) {
       DumpPCAndSymbol(writerfn, arg, stack[i], "    ");
   }
+#endif
 }
 
 void DumpStackTraceAndExit() {

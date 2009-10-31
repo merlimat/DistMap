@@ -647,7 +647,11 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
 _END_GOOGLE_NAMESPACE_
 
 #else
-# error BUG: HAVE_SYMBOLIZE was wrongly set
+// # error BUG: HAVE_SYMBOLIZE was wrongly set
+static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
+                                                    int out_size) {
+  return false;
+}
 #endif
 
 _START_GOOGLE_NAMESPACE_
