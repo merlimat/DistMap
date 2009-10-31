@@ -1,10 +1,9 @@
 #include <distmap/configuration.hpp>
 #include <distmap/membership.hpp>
+#include <distmap/message_bus.hpp>
 #include <distmap/server.hpp>
 #include <distmap/util/log.hpp>
 #include <signal.h>
-
-#include <distmap/connection_pool.hpp>
 
 #include <google/utilities.h>
 
@@ -23,7 +22,7 @@ int main()
     signal( SIGINT, signalHandler );
     signal( SIGQUIT, signalHandler );
 
-    ConnectionPool connectionPool( service );
+    MessageBus connectionPool( service );
     Configuration conf( service );
 
     Membership membership( service, conf, connectionPool );

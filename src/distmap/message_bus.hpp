@@ -1,16 +1,15 @@
 /*
- * connection_pool.hpp
+ * message_bus.hpp
  *
  *  Created on: Oct 29, 2009
  *      Author: mat
  */
 
-#ifndef CONNECTION_POOL_HPP_
-#define CONNECTION_POOL_HPP_
+#ifndef MESSAGE_BUS_HPP_
+#define MESSAGE_BUS_HPP_
 
 #include <distmap/asio.hpp>
 #include <distmap/util/log.hpp>
-#include <map>
 
 namespace distmap
 {
@@ -20,8 +19,9 @@ class ClientConnection: public IntrusiveBase<ClientConnection>
 public:
     typedef boost::intrusive_ptr<ClientConnection> ClientConnectionPtr;
 
-    // typedef boost::function<void( const sys::error_code&, const SharedBuffer& )>
-    //        Callback;
+    typedef boost::function<void( const sys::error_code& )> SendCallback;
+    typedef boost::function<void( const sys::error_code&, const SharedBuffer& )>
+            SendReceiveCallback;
 
     ClientConnection( asio::io_service& service ) :
         m_socket( service )
@@ -34,19 +34,18 @@ public:
         m_socket.async_connect( addr, callback );
     }
 
-    template<typename Buffer, typename Callback>
-    void send( const Buffer& buffer, const Callback& callback )
-    {
-        asio::async_write( m_socket, buffer, bind(
-                &ClientConnection::handleSimpleSend, this, ptr(), callback,
-                ph::error, ph::bytes_transferred ) );
-    }
-
-    template<typename Buffer, typename Callback>
-    void sendAndReceive( const Buffer& buffer, const Callback& callback )
+    void send( const SharedBuffer& buffer, const SendCallback& callback )
     {
         asio::async_write( m_socket, buffer, bind(
                 &ClientConnection::handleSend, this, ptr(), callback,
+                ph::error, ph::bytes_transferred ) );
+    }
+
+    void sendAndReceive( const SharedBuffer& buffer,
+                         const SendReceiveCallback& callback )
+    {
+        asio::async_write( m_socket, buffer, bind(
+                &ClientConnection::handleSendReceive, this, ptr(), callback,
                 ph::error, ph::bytes_transferred ) );
     }
 
@@ -56,25 +55,23 @@ public:
     }
 
 private:
-    template<typename Callback>
-    void handleSimpleSend( const ClientConnectionPtr& ,
-                           const Callback& callback,
-                           const sys::error_code& error,
-                           size_t )
+    void handleSend( const ClientConnectionPtr&,
+                     const SendCallback& callback,
+                     const sys::error_code& error,
+                     size_t )
     {
         callback( error );
     }
 
-    template<typename Callback>
-    void handleSend( const ClientConnectionPtr& cnx,
-                     const Callback& callback,
-                     const sys::error_code& error,
-                     size_t size )
+    void handleSendReceive( const ClientConnectionPtr& cnx,
+                            const SendReceiveCallback& callback,
+                            const sys::error_code& error,
+                            size_t )
     {
         if ( error )
         {
             TRACE( "Error writing data: " << error.message() );
-            callback( error, SharedBuffer() );
+            callback( error, SharedBuffer( 0 ) );
             return;
         }
 
@@ -85,10 +82,9 @@ private:
                 true, ph::error, ph::bytes_transferred ) );
     }
 
-    template<typename Callback>
     void handleReceive( const ClientConnectionPtr& cnx,
                         SharedBuffer& buffer,
-                        const Callback& callback,
+                        const SendReceiveCallback& callback,
                         bool isFirstPart,
                         const sys::error_code& error,
                         size_t size )
@@ -125,11 +121,11 @@ private:
 
 typedef ClientConnection::ClientConnectionPtr ClientConnectionPtr;
 
-class ConnectionPool
+class MessageBus
 {
 public:
-    ConnectionPool( asio::io_service& service );
-    ~ConnectionPool();
+    MessageBus( asio::io_service& service );
+    ~MessageBus();
 
     typedef boost::function<void( const sys::error_code& )> SendCallback;
     typedef boost::function<void( const sys::error_code&, const SharedBuffer& )>
@@ -141,15 +137,20 @@ public:
                          const SendReceiveCallback& );
 
 private:
+    void getConnection( const std::string& node );
     tcp::endpoint getEndpointAddress( const std::string& node ) const;
 
     void handleConnect( const ClientConnectionPtr& cnx,
                         SharedBuffer& msg,
                         const SendCallback& callback,
                         const sys::error_code& error );
+    void handleConnectSendReceive( const ClientConnectionPtr& cnx,
+                                   SharedBuffer& msg,
+                                   const SendReceiveCallback& callback,
+                                   const sys::error_code& error );
     asio::io_service& m_service;
 };
 
 }
 
-#endif /* CONNECTION_POOL_HPP_ */
+#endif /* MESSAGE_BUS_HPP_ */

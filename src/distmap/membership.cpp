@@ -8,7 +8,7 @@
 #include "membership.hpp"
 
 #include <distmap/configuration.hpp>
-#include <distmap/connection_pool.hpp>
+#include <distmap/message_bus.hpp>
 #include <distmap/util/log.hpp>
 
 namespace distmap
@@ -16,9 +16,9 @@ namespace distmap
 
 Membership::Membership( asio::io_service& service,
                         Configuration& conf,
-                        ConnectionPool& connectionPool ) :
-    m_service( service ), m_conf( conf ), m_connectionPool( connectionPool ),
-            m_finder( service, *this, conf ), m_announceTimer( service )
+                        MessageBus& messageBus ) :
+    m_service( service ), m_conf( conf ), m_messageBus( messageBus ), m_finder(
+            service, *this, conf ), m_announceTimer( service )
 {
     TRACE( "Membership::Membership() -- NodeName: " << m_conf.nodeName() );
 }
@@ -48,6 +48,7 @@ void Membership::receivedAnnounce( const std::string& nodeName )
     INFO( "New node announced: " << nodeName );
     // Say hello to node..
 
+    // m_messageBus.send( nodeName, );
 }
 
 void Membership::announceTimeout( const sys::error_code& error )

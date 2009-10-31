@@ -18,9 +18,9 @@ namespace distmap
 Server::Server( asio::io_service& service,
                 Configuration& conf,
                 Membership& membership,
-                ConnectionPool& connectionPool ) :
+                MessageBus& messageBus ) :
     m_service( service ), m_conf( conf ), m_membership( membership ),
-            m_connectionPool( connectionPool ), m_acceptor( service )
+            m_messageBus( messageBus ), m_acceptor( service )
 {
     TRACE( "Server::Server()" );
 

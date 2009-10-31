@@ -16,7 +16,7 @@ namespace distmap
 class Configuration;
 class Membership;
 class Connection;
-class ConnectionPool;
+class MessageBus;
 typedef boost::intrusive_ptr<Connection> ConnectionPtr;
 
 class Server
@@ -25,7 +25,7 @@ public:
     Server( asio::io_service& service,
             Configuration& conf,
             Membership& membership,
-            ConnectionPool& connectionPool );
+            MessageBus& messageBus );
     ~Server();
 
 private:
@@ -36,7 +36,7 @@ private:
     asio::io_service& m_service;
     Configuration& m_conf;
     Membership& m_membership;
-    ConnectionPool& m_connectionPool;
+    MessageBus& m_messageBus;
 
     tcp::acceptor m_acceptor;
 };

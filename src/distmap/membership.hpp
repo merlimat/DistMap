@@ -16,14 +16,14 @@ namespace distmap
 {
 
 class Configuration;
-class ConnectionPool;
+class MessageBus;
 
 class Membership
 {
 public:
     Membership( asio::io_service& service,
                 Configuration& conf,
-                ConnectionPool& connectionPool );
+                MessageBus& connectionPool );
     ~Membership();
 
     const std::string& selfNode();
@@ -42,7 +42,7 @@ private:
 
     asio::io_service& m_service;
     Configuration& m_conf;
-    ConnectionPool& m_connectionPool;
+    MessageBus& m_messageBus;
     Finder m_finder;
 
     asio::deadline_timer m_announceTimer;
