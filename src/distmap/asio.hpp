@@ -104,7 +104,7 @@ public:
         return &(*m_data)[0];
     }
 
-    size_t size()
+    size_t size() const
     {
         return m_data->size();
     }
@@ -112,6 +112,12 @@ public:
     void resize( size_t newSize )
     {
         m_data->resize( newSize );
+    }
+
+    void append( const void* ptr, size_t size )
+    {
+        m_data->insert( m_data->end(), (const char*) ptr, (const char*) ptr
+                + size );
     }
 
 private:

@@ -13,27 +13,9 @@
 namespace distmap
 {
 
-enum MessageType
-{
-    MessagePing,
-    MessagePong,
-    MessageNodeIsDown,
-    MessageNodeList,
+class Message;
 
-    MessageGet,
-    MessageSet,
-};
-
-class Message
-{
-public:
-    Message( MessageType type );
-    ~Message();
-
-private:
-    MessageType m_type;
-    SharedBuffer m_buffer;
-};
+void serialize( const SharedBuffer& buffer, const Message& message );
 
 }
 

@@ -1,0 +1,36 @@
+
+package distmap;
+
+message Announce {
+    required string node = 1;
+}
+
+message Ping {}
+
+message Pong {}
+
+message NodeIsDown {
+    required string node = 1; 
+}
+
+message NodeList {
+    repeated string node = 1; 
+}
+
+message Message {
+    enum Type { 
+        Announce = 2;
+        Ping = 3; 
+        Pong = 4;
+        NodeIsDown = 5;
+        NodeList = 6;
+    }
+    
+    required Type type = 1;
+    
+    optional Announce announce = 2;
+    optional Ping ping = 3;
+    optional Pong pong = 4;
+    optional NodeIsDown nodeIsDown = 5;
+    optional NodeList nodeList = 6;
+}

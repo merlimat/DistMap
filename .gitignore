@@ -4,3 +4,5 @@
 .sconsign.*
 *.log
 distmapServer
+*.pb.cc
+*.pb.h

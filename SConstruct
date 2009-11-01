@@ -30,12 +30,22 @@ else:
     env.Append( CPPFLAGS = ' -DNDEBUG' )
     if platform != 'Darwin':
         env.Append( CXXFLAGS = ' -march=native' )
+        
+bld = Builder(action = 'protoc --cpp_out=src/distmap $SOURCE')
+env.Append(BUILDERS = {'OptRpcCompiler' : bld})
+
+obj = env.OptRpcCompiler( ['src/distmap/distmap.pb.h', 
+                           'src/distmap/distmap.pb.cc'],
+                           'distmap.proto' )
+
+env.Append( LIBS=['protobuf'] )
 
 env.Program( 'distmapServer',
              Glob( 'src/boost_lib/*.cpp' ) +
              Glob( 'src/google/*.cc' ) + 
              Glob( 'src/distmap/*.cpp' ) +
-             Glob( 'src/distmap/util/*.cpp' )
+             Glob( 'src/distmap/util/*.cpp' ) +
+            [ 'src/distmap/distmap.pb.cc' ]
            )
 
 
