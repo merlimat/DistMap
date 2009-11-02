@@ -13,36 +13,6 @@
 namespace distmap
 {
 
-class FinderCommand
-{
-public:
-    enum Type
-    {
-        Invalid = 0, Announce = 1, NodeIsDown = 2
-    };
-
-    FinderCommand( Type type, const std::string& node );
-
-    Type type() const
-    {
-        return m_type;
-    }
-
-    const std::string& node() const
-    {
-        return m_node;
-    }
-
-    SharedBuffer serialize();
-    static FinderCommand parse( const char* buffer, size_t size );
-
-private:
-    Type m_type;
-    std::string m_node;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
 class Configuration;
 class Membership;
 

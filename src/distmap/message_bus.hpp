@@ -71,13 +71,13 @@ private:
         if ( error )
         {
             TRACE( "Error writing data: " << error.message() );
-            callback( error, SharedBuffer( 0 ) );
+            callback( error, SharedBuffer() );
             return;
         }
 
         // Read the response from server
-        SharedBuffer buffer( 4096 );
-        m_socket.async_read_some( buffer, bind(
+        SharedBuffer buffer;
+        m_socket.async_read_some( buffer.prepare( 512 ), bind(
                 &ClientConnection::handleReceive, this, cnx, buffer, callback,
                 true, ph::error, ph::bytes_transferred ) );
     }
@@ -98,17 +98,20 @@ private:
 
         if ( isFirstPart )
         {
-            size_t msgSize = ntohl( *(uint32_t*) buffer.data() );
+            std::istream s( buffer.buffer() );
+            uint32_t msgSize;
+            s.get( (char*) &msgSize, sizeof(msgSize) );
+            msgSize = ntohl( msgSize );
+
             TRACE( "Msg size: " << msgSize << " -- Read Size: " << size );
-            buffer.resize( msgSize );
 
             if ( msgSize > size )
             {
                 // Schedule a complete read
-                asio::async_read( m_socket, asio::buffer( buffer.data() + size,
-                        msgSize - size ), bind(
-                        &ClientConnection::handleReceive, this, cnx, buffer,
-                        callback, false, ph::error, ph::bytes_transferred ) );
+                asio::async_read( m_socket, buffer.prepare( msgSize - size ),
+                        bind( &ClientConnection::handleReceive, this, cnx,
+                                buffer, callback, false, ph::error,
+                                ph::bytes_transferred ) );
                 return;
             }
         }

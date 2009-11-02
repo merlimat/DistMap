@@ -43,9 +43,10 @@ void Connection::start()
 
 void Connection::receiveMessage()
 {
-    SharedBuffer buffer( 4096 );
-    m_socket.async_read_some( buffer, bind( &Connection::handleReceive, this,
-            ptr(), buffer, true, ph::error, ph::bytes_transferred ) );
+    SharedBuffer buffer;
+    m_socket.async_read_some( buffer.prepare( 512 ), bind(
+            &Connection::handleReceive, this, ptr(), buffer, true, ph::error,
+            ph::bytes_transferred ) );
 }
 
 void Connection::handleReceive( const ConnectionPtr& cnx,
@@ -62,16 +63,18 @@ void Connection::handleReceive( const ConnectionPtr& cnx,
 
     if ( isFirstPart )
     {
-        size_t msgSize = ntohl( *(uint32_t*) buffer.data() );
+        std::istream s( buffer.buffer() );
+        uint32_t msgSize;
+        s.get( (char*)&msgSize, sizeof(msgSize) );
+        msgSize = ntohl( msgSize );
         TRACE( "Msg size: " << msgSize << " -- Read Size: " << size );
-        buffer.resize( msgSize );
 
         if ( msgSize > size )
         {
             // Schedule a complete read
-            asio::async_read( m_socket, asio::buffer( buffer.data() + size,
-                    msgSize - size ), bind( &Connection::handleReceive, this,
-                    cnx, buffer, false, ph::error, ph::bytes_transferred ) );
+            asio::async_read( m_socket, buffer.prepare( msgSize - size ), bind(
+                    &Connection::handleReceive, this, cnx, buffer, false,
+                    ph::error, ph::bytes_transferred ) );
             return;
         }
     }

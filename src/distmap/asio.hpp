@@ -61,12 +61,11 @@ public:
     }
 };
 
-class InternalSharedBuffer: public std::vector<char>, public IntrusiveBase<
+class InternalSharedBuffer: public asio::streambuf, public IntrusiveBase<
         InternalSharedBuffer>
 {
 public:
-    InternalSharedBuffer( size_t size ) :
-        std::vector<char>( size )
+    InternalSharedBuffer()
     {
     }
 
@@ -78,51 +77,61 @@ typedef boost::intrusive_ptr<InternalSharedBuffer> InternalSharedBufferPtr;
 class SharedBuffer
 {
 public:
-    SharedBuffer( size_t size ) :
-        m_data( new InternalSharedBuffer( size ) ), m_buffer( asio::buffer(
-                *m_data ) )
+    SharedBuffer() :
+        m_data( new InternalSharedBuffer() )
     {
     }
 
-    // Implement the ConstBufferSequence requirements.
-    typedef asio::mutable_buffer value_type;
-    typedef asio::mutable_buffer* iterator;
-    typedef const asio::mutable_buffer* const_iterator;
-
-    const asio::mutable_buffer* begin() const
+    asio::streambuf::mutable_buffers_type prepare( size_t size )
     {
-        return &m_buffer;
+        return m_data->prepare( size );
     }
 
-    const asio::mutable_buffer* end() const
+    InternalSharedBuffer* buffer()
     {
-        return &m_buffer + 1;
-    }
-
-    char* data()
-    {
-        return &(*m_data)[0];
-    }
-
-    size_t size() const
-    {
-        return m_data->size();
-    }
-
-    void resize( size_t newSize )
-    {
-        m_data->resize( newSize );
-    }
-
-    void append( const void* ptr, size_t size )
-    {
-        m_data->insert( m_data->end(), (const char*) ptr, (const char*) ptr
-                + size );
+        return m_data.get();
     }
 
 private:
     InternalSharedBufferPtr m_data;
-    asio::mutable_buffer m_buffer;
+};
+
+class ConstSharedBuffer
+{
+public:
+    ConstSharedBuffer() :
+        m_data( new InternalSharedBuffer() ), m_buffer()
+    {
+    }
+
+    // Implement the ConstBufferSequence requirements.
+    typedef asio::const_buffer value_type;
+    typedef asio::const_buffer* iterator;
+    typedef const asio::const_buffer* const_iterator;
+
+    const asio::const_buffer* begin() const
+    {
+        return &m_buffer;
+    }
+
+    const asio::const_buffer* end() const
+    {
+        return begin() + 1;
+    }
+
+    void finished()
+    {
+        m_buffer = m_data->data();
+    }
+
+    InternalSharedBuffer* buffer()
+    {
+        return m_data.get();
+    }
+
+private:
+    InternalSharedBufferPtr m_data;
+    asio::const_buffer m_buffer;
 };
 
 }
