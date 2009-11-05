@@ -10,11 +10,17 @@
 
 #include <distmap/asio.hpp>
 #include <distmap/util/log.hpp>
+#include <boost/unordered_map.hpp>
 
 namespace distmap
 {
 
-class ClientConnection: public IntrusiveBase<ClientConnection>
+class ClientConnection;
+class MessageBus;
+
+typedef IntrusivePoolBase<ClientConnection, MessageBus> ClientConnectionBase;
+
+class ClientConnection: public ClientConnectionBase
 {
 public:
     typedef boost::intrusive_ptr<ClientConnection> ClientConnectionPtr;
@@ -23,8 +29,8 @@ public:
     typedef boost::function<void( const sys::error_code&, const SharedBuffer& )>
             SendReceiveCallback;
 
-    ClientConnection( asio::io_service& service ) :
-        m_socket( service )
+    ClientConnection( asio::io_service& service, MessageBus& messageBus ) :
+        ClientConnectionBase( messageBus ), m_socket( service )
     {
     }
 
@@ -145,6 +151,8 @@ public:
                          const SharedBuffer& msg,
                          const SendReceiveCallback& );
 
+    void release( ClientConnection* cnx );
+
 private:
     void getConnection( const std::string& node );
     tcp::endpoint getEndpointAddress( const std::string& node ) const;
@@ -159,6 +167,9 @@ private:
                                    const sys::error_code& error );
 
     asio::io_service& m_service;
+
+    typedef std::map<std::string, ClientConnection*> Pool;
+    Pool m_pool;
 };
 
 }

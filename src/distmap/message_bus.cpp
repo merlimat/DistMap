@@ -28,7 +28,7 @@ void MessageBus::send( const std::string& node,
                        const SendCallback& callback )
 {
     tcp::endpoint endpoint = getEndpointAddress( node );
-    ClientConnectionPtr cnx( new ClientConnection( m_service ) );
+    ClientConnectionPtr cnx( new ClientConnection( m_service, *this ) );
     cnx->connect( endpoint, bind( &MessageBus::handleConnect, this, cnx, msg,
             callback, ph::error ) );
 }
@@ -38,7 +38,7 @@ void MessageBus::sendAndReceive( const std::string& node,
                                  const SendReceiveCallback& callback )
 {
     tcp::endpoint endpoint = getEndpointAddress( node );
-    ClientConnectionPtr cnx( new ClientConnection( m_service ) );
+    ClientConnectionPtr cnx( new ClientConnection( m_service, *this ) );
     cnx->connect( endpoint, bind( &MessageBus::handleConnectSendReceive, this, cnx, msg,
             callback, ph::error ) );
 }
@@ -80,6 +80,11 @@ tcp::endpoint MessageBus::getEndpointAddress( const std::string& node ) const
     uint16_t port = atoi( node.substr( idx + 1 ).c_str() );
     TRACE( "ClientConnection " << ipAddress << ':' << port );
     return tcp::endpoint( ip::address::from_string( ipAddress.c_str() ), port );
+}
+
+void MessageBus::release( ClientConnection* cnx )
+{
+    TRACE( "Connection released to pool: " << cnx->endpoint() );
 }
 
 }

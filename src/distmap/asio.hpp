@@ -61,6 +61,49 @@ public:
     }
 };
 
+template<typename T, typename Pool>
+class IntrusivePoolBase
+{
+    uint32_t m_counter;
+    Pool& m_pool;
+    T* m_next;
+
+public:
+    IntrusivePoolBase( Pool& pool ) :
+        m_counter( 0 ), m_pool( pool ), m_next( 0 )
+    {
+    }
+
+    boost::intrusive_ptr<T> ptr()
+    {
+        return boost::intrusive_ptr<T>( static_cast<T*> ( this ) );
+    }
+
+    void setNext( T* next )
+    {
+        m_next = next;
+    }
+
+    T* next() const
+    {
+        return m_next;
+    }
+
+    friend inline void intrusive_ptr_add_ref( IntrusivePoolBase<T,Pool>* p )
+    {
+        p->m_counter++;
+    }
+
+    friend inline void intrusive_ptr_release( IntrusivePoolBase<T,Pool>* p )
+    {
+        p->m_counter--;
+        if ( p->m_counter == 0 )
+        {
+            p->m_pool.release( static_cast<T*> ( p ) );
+        }
+    }
+};
+
 class InternalSharedBuffer: public std::vector<char>, public IntrusiveBase<
         InternalSharedBuffer>
 {
