@@ -54,6 +54,8 @@ void Server::bindAddress()
     else
         m_acceptor.open( tcp::v6() );
 
+    m_acceptor.set_option( tcp::acceptor::reuse_address( true ) );
+
     sys::error_code ec;
 
     do
@@ -73,16 +75,18 @@ void Server::bindAddress()
         ERROR( "Failed to bind to address: "
                 << tcp::endpoint( m_conf.listenIP(), port-1)
                 << " : " << ec.message() );
+        return;
     }
-    else
-    {
-        m_conf.setListenEndpoint( m_acceptor.local_endpoint().address(),
-                m_acceptor.local_endpoint().port() );
-    }
+
+
+    m_conf.setListenEndpoint( m_acceptor.local_endpoint().address(),
+            m_acceptor.local_endpoint().port() );
+    m_acceptor.listen();
 }
 
 void Server::startAccept()
 {
+
     ConnectionPtr cnx( new Connection( m_service ) );
 
     m_acceptor.async_accept( cnx->socket(), bind( &Server::handleAccept, this,

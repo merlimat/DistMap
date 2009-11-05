@@ -85,9 +85,10 @@ void Finder::announceMyself( const std::string& nodeName )
 
     ConstSharedBuffer data;
     std::ostream s( data.buffer() );
-    uint32_t size = htonl( msg.ByteSize() );
-    s.write( (const char*) &size, sizeof(size) );
-    TRACE( "announce message sent. size=" << buffer.size() );
+    msg.SerializeToOstream( &s );
+    data.finished();
+
+    TRACE( "announce message sent." );
     m_socket.async_send_to( data, m_multicastEndpoint, bind(
             &Finder::handleMsgSent, this, ph::error, ph::bytes_transferred ) );
 }

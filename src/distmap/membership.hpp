@@ -39,6 +39,7 @@ public:
 
 private:
     void announceTimeout( const sys::error_code& );
+    void handleMessageSent( const sys::error_code& error );
 
     asio::io_service& m_service;
     Configuration& m_conf;

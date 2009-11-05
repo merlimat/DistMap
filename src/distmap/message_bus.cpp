@@ -24,7 +24,7 @@ MessageBus::~MessageBus()
 }
 
 void MessageBus::send( const std::string& node,
-                       SharedBuffer& msg,
+                       const ConstSharedBuffer& msg,
                        const SendCallback& callback )
 {
     tcp::endpoint endpoint = getEndpointAddress( node );
@@ -34,7 +34,7 @@ void MessageBus::send( const std::string& node,
 }
 
 void MessageBus::sendAndReceive( const std::string& node,
-                                 const SharedBuffer& msg,
+                                 const ConstSharedBuffer& msg,
                                  const SendReceiveCallback& callback )
 {
     tcp::endpoint endpoint = getEndpointAddress( node );
@@ -44,7 +44,7 @@ void MessageBus::sendAndReceive( const std::string& node,
 }
 
 void MessageBus::handleConnect( const ClientConnectionPtr& cnx,
-                                SharedBuffer& msg,
+                                const ConstSharedBuffer& msg,
                                 const SendCallback& callback,
                                 const sys::error_code& error )
 {
@@ -59,14 +59,14 @@ void MessageBus::handleConnect( const ClientConnectionPtr& cnx,
 }
 
 void MessageBus::handleConnectSendReceive( const ClientConnectionPtr& cnx,
-                                SharedBuffer& msg,
+                                const ConstSharedBuffer& msg,
                                 const SendReceiveCallback& callback,
                                 const sys::error_code& error )
 {
     if ( error )
     {
-        DEBUG( "Error connecting to " << cnx->socket().remote_endpoint() );
-        callback( error, msg );
+        DEBUG( "Error connecting to " << cnx->endpoint() );
+        callback( error, SharedBuffer() );
         return;
     }
 

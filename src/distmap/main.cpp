@@ -26,7 +26,7 @@ int main()
 
     signal( SIGINT, signalHandler );
     signal( SIGQUIT, signalHandler );
-/*
+
     MessageBus connectionPool( service );
     Configuration conf( service );
 
@@ -37,26 +37,6 @@ int main()
     service.run();
 
     INFO( "Stopped Distmap Server" );
-*/
-    Message msg;
-    msg.set_type( Message::Ping );
-    msg.mutable_ping();
-/*
-    NodeList* nodeList = msg.mutable_nodelist();
-    nodeList->add_node( std::string("pepe") );
-    nodeList->add_node( "manolo" );
-    // nodeList->add_node( "fulano" );
-*/
-    INFO( "Msg size: " << msg.ByteSize() );
-
-    asio::streambuf streambuf( 512 );
-    std::ostream out( &streambuf );
-
-    msg.SerializeToOstream(&out);
-
-    char buffer[1024];
-    size_t size = streambuf.sgetn( buffer, sizeof(buffer) );
-    dumpBuffer( std::cout, buffer, size );
 
     google::protobuf::ShutdownProtobufLibrary();
     return 0;

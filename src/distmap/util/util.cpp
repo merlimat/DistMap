@@ -8,6 +8,7 @@
 #include "util.hpp"
 
 #include <iostream>
+#include <stdio.h>
 
 void dumpBuffer( std::ostream& ss, const void* ptr, uint32_t size )
 {

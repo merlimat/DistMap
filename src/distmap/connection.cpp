@@ -63,10 +63,11 @@ void Connection::handleReceive( const ConnectionPtr& cnx,
 
     if ( isFirstPart )
     {
+        buffer.buffer()->commit( size );
         std::istream s( buffer.buffer() );
-        uint32_t msgSize;
-        s.get( (char*)&msgSize, sizeof(msgSize) );
-        msgSize = ntohl( msgSize );
+        uint32_t netMsgSize;
+        s.get( (char*)&netMsgSize, sizeof(netMsgSize) );
+        uint32_t msgSize = ntohl( netMsgSize );
         TRACE( "Msg size: " << msgSize << " -- Read Size: " << size );
 
         if ( msgSize > size )

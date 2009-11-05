@@ -11,6 +11,8 @@
 #include <distmap/message_bus.hpp>
 #include <distmap/util/log.hpp>
 
+#include <distmap/distmap.pb.h>
+
 namespace distmap
 {
 
@@ -46,15 +48,34 @@ void Membership::receivedAnnounce( const std::string& nodeName )
     }
 
     INFO( "New node announced: " << nodeName );
-    // Say hello to node..
 
-    // m_messageBus.send( nodeName, );
+    // Send node list to new node
+    Message msg;
+    msg.set_type( Message::NodeList );
+    NodeList* nodeList = msg.mutable_nodelist();
+    nodeList->add_node( m_node );
+    nodeList->add_node( nodeName );
+
+    ConstSharedBuffer data;
+    std::ostream s( data.buffer() );
+    uint32_t size = htonl( msg.ByteSize() );
+    s.write( (const char*)&size, sizeof(size) );
+    msg.SerializeToOstream( &s );
+    data.finished();
+
+    m_messageBus.send( nodeName, data, bind( &Membership::handleMessageSent,
+            this, ph::error ) );
 }
 
 void Membership::announceTimeout( const sys::error_code& error )
 {
     TRACE( "announceTimeout error=" << error.message() );
     announce();
+}
+
+void Membership::handleMessageSent( const sys::error_code& error )
+{
+
 }
 
 } // namespace distmap
