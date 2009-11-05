@@ -4,8 +4,7 @@ if os.path.exists( '/usr/local/build_cache' ):
     CacheDir( '/usr/local/build_cache' )
 
 debug = int( ARGUMENTS.get('debug', 0) )
-
-env = Environment()
+env = Environment( ENV=os.environ )
 
 conf = Configure(env)
 # if not conf.CheckHeader( 'boost/asio.hpp' ):
@@ -17,7 +16,7 @@ env.Append( CPPPATH = ['src', 'include'] )
 env.Append( CXXFLAGS = ' -Wall -Wextra' )
 
 env.Append( CPPFLAGS = ' -DBOOST_DISABLE_THREADS' )
-
+ 
 platform = os.uname()[0]
 if platform != 'Darwin':
     env.Append( LIBS=['rt'] )
@@ -38,7 +37,7 @@ obj = env.OptRpcCompiler( ['src/distmap/distmap.pb.h',
                            'src/distmap/distmap.pb.cc'],
                            'distmap.proto' )
 
-env.Append( LIBS=['protobuf'] )
+env.Append( LIBS=['protobuf-lite'] )
 
 env.Program( 'distmapServer',
              Glob( 'src/boost_lib/*.cpp' ) +

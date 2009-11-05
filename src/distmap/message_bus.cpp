@@ -24,7 +24,7 @@ MessageBus::~MessageBus()
 }
 
 void MessageBus::send( const std::string& node,
-                       const ConstSharedBuffer& msg,
+                       const SharedBuffer& msg,
                        const SendCallback& callback )
 {
     tcp::endpoint endpoint = getEndpointAddress( node );
@@ -34,7 +34,7 @@ void MessageBus::send( const std::string& node,
 }
 
 void MessageBus::sendAndReceive( const std::string& node,
-                                 const ConstSharedBuffer& msg,
+                                 const SharedBuffer& msg,
                                  const SendReceiveCallback& callback )
 {
     tcp::endpoint endpoint = getEndpointAddress( node );
@@ -44,7 +44,7 @@ void MessageBus::sendAndReceive( const std::string& node,
 }
 
 void MessageBus::handleConnect( const ClientConnectionPtr& cnx,
-                                const ConstSharedBuffer& msg,
+                                const SharedBuffer& msg,
                                 const SendCallback& callback,
                                 const sys::error_code& error )
 {
@@ -59,7 +59,7 @@ void MessageBus::handleConnect( const ClientConnectionPtr& cnx,
 }
 
 void MessageBus::handleConnectSendReceive( const ClientConnectionPtr& cnx,
-                                const ConstSharedBuffer& msg,
+                                const SharedBuffer& msg,
                                 const SendReceiveCallback& callback,
                                 const sys::error_code& error )
 {

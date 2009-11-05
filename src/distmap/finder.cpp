@@ -83,14 +83,10 @@ void Finder::announceMyself( const std::string& nodeName )
     msg.set_type( Message::Announce );
     msg.mutable_announce()->set_node( nodeName );
 
-    ConstSharedBuffer data;
-    std::ostream s( data.buffer() );
-    msg.SerializeToOstream( &s );
-    data.finished();
-
-    TRACE( "announce message sent." );
+    SharedBuffer data = writeMessage( msg );
     m_socket.async_send_to( data, m_multicastEndpoint, bind(
             &Finder::handleMsgSent, this, ph::error, ph::bytes_transferred ) );
+    TRACE( "announce message sent." );
 }
 
 void Finder::nodeIsDown( const std::string& )

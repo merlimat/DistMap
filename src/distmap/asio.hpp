@@ -61,15 +61,9 @@ public:
     }
 };
 
-class InternalSharedBuffer: public asio::streambuf, public IntrusiveBase<
+class InternalSharedBuffer: public std::vector<char>, public IntrusiveBase<
         InternalSharedBuffer>
 {
-public:
-    InternalSharedBuffer()
-    {
-    }
-
-    friend class SharedBuffer;
 };
 
 typedef boost::intrusive_ptr<InternalSharedBuffer> InternalSharedBufferPtr;
@@ -77,62 +71,93 @@ typedef boost::intrusive_ptr<InternalSharedBuffer> InternalSharedBufferPtr;
 class SharedBuffer
 {
 public:
-    SharedBuffer() :
+    SharedBuffer( size_t size = 1024 ) :
         m_data( new InternalSharedBuffer() )
     {
-    }
-
-    asio::streambuf::mutable_buffers_type prepare( size_t size )
-    {
-        return m_data->prepare( size );
-    }
-
-    InternalSharedBuffer* buffer()
-    {
-        return m_data.get();
-    }
-
-private:
-    InternalSharedBufferPtr m_data;
-};
-
-class ConstSharedBuffer
-{
-public:
-    ConstSharedBuffer() :
-        m_data( new InternalSharedBuffer() ), m_buffer()
-    {
+        m_data->resize( size );
+        m_buffer = asio::buffer( *m_data );
     }
 
     // Implement the ConstBufferSequence requirements.
-    typedef asio::const_buffer value_type;
-    typedef asio::const_buffer* iterator;
-    typedef const asio::const_buffer* const_iterator;
+    typedef asio::mutable_buffer value_type;
+    typedef asio::mutable_buffer* iterator;
+    typedef const asio::mutable_buffer* const_iterator;
 
-    const asio::const_buffer* begin() const
+    const asio::mutable_buffer* begin() const
     {
         return &m_buffer;
     }
 
-    const asio::const_buffer* end() const
+    const asio::mutable_buffer* end() const
     {
         return begin() + 1;
     }
 
-    void finished()
+    void resize( size_t size )
     {
-        m_buffer = m_data->data();
+        m_data->resize( size );
+        m_buffer = asio::buffer( *m_data );
     }
 
-    InternalSharedBuffer* buffer()
+    size_t size() const
     {
-        return m_data.get();
+        return m_data->size();
+    }
+
+    const char* data() const
+    {
+        return &(*m_data)[0];
+    }
+
+    char* data()
+    {
+        return &(*m_data)[0];
     }
 
 private:
     InternalSharedBufferPtr m_data;
-    asio::const_buffer m_buffer;
+    asio::mutable_buffer m_buffer;
 };
+
+inline size_t readMessageSize( const SharedBuffer& buffer )
+{
+    const uint32_t* size = (const uint32_t*) buffer.data();
+    return ntohl( *size );
+}
+
+template<typename Msg>
+inline SharedBuffer writeMessage( const Msg& msg )
+{
+    size_t size = msg.ByteSize();
+    SharedBuffer buffer( size );
+    msg.SerializeToArray( buffer.data(), buffer.size() );
+    return buffer;
+}
+
+template<typename Msg>
+inline SharedBuffer writeMessageWithSize( const Msg& msg )
+{
+    size_t size = msg.ByteSize() + sizeof(uint32_t);
+    SharedBuffer buffer( size );
+
+    *(uint32_t*) buffer.data() = htonl( size );
+    msg.SerializeToArray( buffer.data() + sizeof(uint32_t), buffer.size()
+            - sizeof(uint32_t) );
+    return buffer;
+}
+
+template<typename Msg>
+inline void readMessage( const SharedBuffer& buffer, Msg& msg )
+{
+    msg.ParseFromArray( buffer.data(), buffer.size() );
+}
+
+template<typename Msg>
+inline void readMessageWithSize( const SharedBuffer& buffer, Msg& msg )
+{
+    msg.ParseFromArray( buffer.data() + sizeof(uint32_t), buffer.size()
+            - sizeof(uint32_t) );
+}
 
 }
 

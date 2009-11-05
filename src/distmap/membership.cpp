@@ -56,12 +56,7 @@ void Membership::receivedAnnounce( const std::string& nodeName )
     nodeList->add_node( m_node );
     nodeList->add_node( nodeName );
 
-    ConstSharedBuffer data;
-    std::ostream s( data.buffer() );
-    uint32_t size = htonl( msg.ByteSize() );
-    s.write( (const char*)&size, sizeof(size) );
-    msg.SerializeToOstream( &s );
-    data.finished();
+    SharedBuffer data = writeMessageWithSize( msg );
 
     m_messageBus.send( nodeName, data, bind( &Membership::handleMessageSent,
             this, ph::error ) );

@@ -35,14 +35,14 @@ public:
         m_socket.async_connect( addr, callback );
     }
 
-    void send( const ConstSharedBuffer& buffer, const SendCallback& callback )
+    void send( const SharedBuffer& buffer, const SendCallback& callback )
     {
         asio::async_write( m_socket, buffer, bind(
                 &ClientConnection::handleSend, this, ptr(), callback,
                 ph::error, ph::bytes_transferred ) );
     }
 
-    void sendAndReceive( const ConstSharedBuffer& buffer,
+    void sendAndReceive( const SharedBuffer& buffer,
                          const SendReceiveCallback& callback )
     {
         asio::async_write( m_socket, buffer, bind(
@@ -83,7 +83,7 @@ private:
 
         // Read the response from server
         SharedBuffer buffer;
-        m_socket.async_read_some( buffer.prepare( 512 ), bind(
+        m_socket.async_read_some( buffer, bind(
                 &ClientConnection::handleReceive, this, cnx, buffer, callback,
                 true, ph::error, ph::bytes_transferred ) );
     }
@@ -104,20 +104,17 @@ private:
 
         if ( isFirstPart )
         {
-            std::istream s( buffer.buffer() );
-            uint32_t msgSize;
-            s.get( (char*) &msgSize, sizeof(msgSize) );
-            msgSize = ntohl( msgSize );
-
+            uint32_t msgSize = readMessageSize( buffer );
             TRACE( "Msg size: " << msgSize << " -- Read Size: " << size );
 
             if ( msgSize > size )
             {
                 // Schedule a complete read
-                asio::async_read( m_socket, buffer.prepare( msgSize - size ),
-                        bind( &ClientConnection::handleReceive, this, cnx,
-                                buffer, callback, false, ph::error,
-                                ph::bytes_transferred ) );
+                buffer.resize( msgSize );
+                asio::async_read( m_socket, asio::buffer( buffer.data() + size,
+                        msgSize - size ), bind(
+                        &ClientConnection::handleReceive, this, cnx, buffer,
+                        callback, false, ph::error, ph::bytes_transferred ) );
                 return;
             }
         }
@@ -142,10 +139,10 @@ public:
             SendReceiveCallback;
 
     void send( const std::string& node,
-               const ConstSharedBuffer& msg,
+               const SharedBuffer& msg,
                const SendCallback& );
     void sendAndReceive( const std::string& node,
-                         const ConstSharedBuffer& msg,
+                         const SharedBuffer& msg,
                          const SendReceiveCallback& );
 
 private:
@@ -153,11 +150,11 @@ private:
     tcp::endpoint getEndpointAddress( const std::string& node ) const;
 
     void handleConnect( const ClientConnectionPtr& cnx,
-                        const ConstSharedBuffer& msg,
+                        const SharedBuffer& msg,
                         const SendCallback& callback,
                         const sys::error_code& error );
     void handleConnectSendReceive( const ClientConnectionPtr& cnx,
-                                   const ConstSharedBuffer& msg,
+                                   const SharedBuffer& msg,
                                    const SendReceiveCallback& callback,
                                    const sys::error_code& error );
 

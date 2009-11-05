@@ -8,6 +8,7 @@
 #include "connection.hpp"
 
 #include <distmap/util/log.hpp>
+#include <distmap/distmap.pb.h>
 
 namespace distmap
 {
@@ -44,9 +45,8 @@ void Connection::start()
 void Connection::receiveMessage()
 {
     SharedBuffer buffer;
-    m_socket.async_read_some( buffer.prepare( 512 ), bind(
-            &Connection::handleReceive, this, ptr(), buffer, true, ph::error,
-            ph::bytes_transferred ) );
+    m_socket.async_read_some( buffer, bind( &Connection::handleReceive, this,
+            ptr(), buffer, true, ph::error, ph::bytes_transferred ) );
 }
 
 void Connection::handleReceive( const ConnectionPtr& cnx,
@@ -63,26 +63,41 @@ void Connection::handleReceive( const ConnectionPtr& cnx,
 
     if ( isFirstPart )
     {
-        buffer.buffer()->commit( size );
-        std::istream s( buffer.buffer() );
-        uint32_t netMsgSize;
-        s.get( (char*)&netMsgSize, sizeof(netMsgSize) );
-        uint32_t msgSize = ntohl( netMsgSize );
+        uint32_t msgSize = readMessageSize( buffer );
         TRACE( "Msg size: " << msgSize << " -- Read Size: " << size );
 
         if ( msgSize > size )
         {
             // Schedule a complete read
-            asio::async_read( m_socket, buffer.prepare( msgSize - size ), bind(
-                    &Connection::handleReceive, this, cnx, buffer, false,
-                    ph::error, ph::bytes_transferred ) );
+            buffer.resize( msgSize );
+            asio::async_read( m_socket, asio::buffer( buffer.data() + size,
+                    msgSize - size ), bind( &Connection::handleReceive, this,
+                    cnx, buffer, false, ph::error, ph::bytes_transferred ) );
             return;
         }
     }
 
     TRACE( "Got the complete message" );
     /// Do something....
-
+    Message msg;
+    readMessageWithSize( buffer, msg );
+    switch ( msg.type() )
+    {
+    case Message::NodeList:
+    {
+        TRACE( "Node list received: " );
+        const NodeList& nodeList = msg.nodelist();
+        for ( int i = 0; i < nodeList.node_size(); i++ )
+        {
+            TRACE( " - Node: " << nodeList.node( i ) );
+        }
+        break;
+    }
+    default:
+        ERROR( "Invalid msg received." )
+        ;
+        break;
+    }
 
     receiveMessage();
 }
