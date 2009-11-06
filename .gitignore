@@ -4,5 +4,8 @@
 .sconsign.*
 *.log
 distmapServer
+protoc
+libprotobuf.a
+build_cache
 *.pb.cc
 *.pb.h
