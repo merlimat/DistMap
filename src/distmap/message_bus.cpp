@@ -21,6 +21,19 @@ MessageBus::MessageBus( asio::io_service& service ) :
 MessageBus::~MessageBus()
 {
     TRACE( "ConnectionPool::~ConnectionPool" );
+    for ( Pool::iterator it = m_pool.begin(); it != m_pool.end(); ++it )
+    {
+        ClientConnection* cnx = it->second;
+        ClientConnection* nextCnx = cnx->next();
+        delete cnx;
+
+        while ( nextCnx != NULL )
+        {
+            cnx = nextCnx;
+            nextCnx = cnx->next();
+            delete cnx;
+        }
+    }
 }
 
 void MessageBus::send( const std::string& node,
@@ -102,6 +115,12 @@ ClientConnectionPtr MessageBus::getConnection( const std::string& address )
 
 void MessageBus::release( ClientConnection* cnx )
 {
+    if ( cnx->error() )
+    {
+        delete cnx;
+        return;
+    }
+
     TRACE( "Connection released to pool: " << cnx->address() );
     std::pair<Pool::iterator, bool> res = m_pool.insert( std::make_pair(
             cnx->address(), cnx ) );

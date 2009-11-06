@@ -33,7 +33,7 @@ public:
                       MessageBus& messageBus,
                       const std::string& address ) :
         ClientConnectionBase( messageBus ), m_socket( service ), m_address(
-                address )
+                address ), m_error( false )
     {
     }
 
@@ -68,12 +68,19 @@ public:
         return m_address;
     }
 
+    bool error() const
+    {
+        return m_error;
+    }
+
 private:
     void handleSend( const ClientConnectionPtr&,
                      const SendCallback& callback,
                      const sys::error_code& error,
                      size_t )
     {
+        if ( error )
+            m_error = true;
         callback( error );
     }
 
@@ -85,6 +92,7 @@ private:
         if ( error )
         {
             TRACE( "Error writing data: " << error.message() );
+            m_error = true;
             callback( error, SharedBuffer() );
             return;
         }
@@ -106,6 +114,7 @@ private:
         if ( error || size == 0 )
         {
             TRACE( "Error reading data: " << error.message() );
+            m_error = true;
             callback( error, buffer );
             return;
         }
@@ -132,6 +141,7 @@ private:
 
     tcp::socket m_socket;
     std::string m_address;
+    bool m_error;
 };
 
 typedef ClientConnection::ClientConnectionPtr ClientConnectionPtr;
