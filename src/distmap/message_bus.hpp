@@ -29,15 +29,17 @@ public:
     typedef boost::function<void( const sys::error_code&, const SharedBuffer& )>
             SendReceiveCallback;
 
-    ClientConnection( asio::io_service& service, MessageBus& messageBus ) :
-        ClientConnectionBase( messageBus ), m_socket( service )
+    ClientConnection( asio::io_service& service,
+                      MessageBus& messageBus,
+                      const std::string& address ) :
+        ClientConnectionBase( messageBus ), m_socket( service ), m_address(
+                address )
     {
     }
 
     template<typename Callback>
     void connect( const tcp::endpoint& addr, const Callback& callback )
     {
-        m_endpoint = addr;
         m_socket.async_connect( addr, callback );
     }
 
@@ -61,9 +63,9 @@ public:
         return m_socket;
     }
 
-    const tcp::endpoint endpoint() const
+    const std::string& address() const
     {
-        return m_endpoint;
+        return m_address;
     }
 
 private:
@@ -129,7 +131,7 @@ private:
     }
 
     tcp::socket m_socket;
-    tcp::endpoint m_endpoint;
+    std::string m_address;
 };
 
 typedef ClientConnection::ClientConnectionPtr ClientConnectionPtr;
@@ -154,7 +156,7 @@ public:
     void release( ClientConnection* cnx );
 
 private:
-    void getConnection( const std::string& node );
+    ClientConnectionPtr getConnection( const std::string& node );
     tcp::endpoint getEndpointAddress( const std::string& node ) const;
 
     void handleConnect( const ClientConnectionPtr& cnx,

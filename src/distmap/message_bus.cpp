@@ -28,7 +28,7 @@ void MessageBus::send( const std::string& node,
                        const SendCallback& callback )
 {
     tcp::endpoint endpoint = getEndpointAddress( node );
-    ClientConnectionPtr cnx( new ClientConnection( m_service, *this ) );
+    ClientConnectionPtr cnx = getConnection( node );
     cnx->connect( endpoint, bind( &MessageBus::handleConnect, this, cnx, msg,
             callback, ph::error ) );
 }
@@ -38,9 +38,9 @@ void MessageBus::sendAndReceive( const std::string& node,
                                  const SendReceiveCallback& callback )
 {
     tcp::endpoint endpoint = getEndpointAddress( node );
-    ClientConnectionPtr cnx( new ClientConnection( m_service, *this ) );
-    cnx->connect( endpoint, bind( &MessageBus::handleConnectSendReceive, this, cnx, msg,
-            callback, ph::error ) );
+    ClientConnectionPtr cnx = getConnection( node );
+    cnx->connect( endpoint, bind( &MessageBus::handleConnectSendReceive, this,
+            cnx, msg, callback, ph::error ) );
 }
 
 void MessageBus::handleConnect( const ClientConnectionPtr& cnx,
@@ -59,13 +59,13 @@ void MessageBus::handleConnect( const ClientConnectionPtr& cnx,
 }
 
 void MessageBus::handleConnectSendReceive( const ClientConnectionPtr& cnx,
-                                const SharedBuffer& msg,
-                                const SendReceiveCallback& callback,
-                                const sys::error_code& error )
+                                           const SharedBuffer& msg,
+                                           const SendReceiveCallback& callback,
+                                           const sys::error_code& error )
 {
     if ( error )
     {
-        DEBUG( "Error connecting to " << cnx->endpoint() );
+        DEBUG( "Error connecting to " << cnx->address() );
         callback( error, SharedBuffer() );
         return;
     }
@@ -82,9 +82,35 @@ tcp::endpoint MessageBus::getEndpointAddress( const std::string& node ) const
     return tcp::endpoint( ip::address::from_string( ipAddress.c_str() ), port );
 }
 
+ClientConnectionPtr MessageBus::getConnection( const std::string& address )
+{
+    Pool::iterator it = m_pool.find( address );
+    if ( it == m_pool.end() )
+        return ClientConnectionPtr( new ClientConnection( m_service, *this,
+                address ) );
+
+    // Extract from pool
+    ClientConnection* cnx = it->second;
+    if ( cnx->next() != NULL )
+    {
+        m_pool.insert( std::make_pair( address, cnx->next() ) );
+        cnx->setNext( NULL );
+    }
+
+    return ClientConnectionPtr( cnx );
+}
+
 void MessageBus::release( ClientConnection* cnx )
 {
-    TRACE( "Connection released to pool: " << cnx->endpoint() );
+    TRACE( "Connection released to pool: " << cnx->address() );
+    std::pair<Pool::iterator, bool> res = m_pool.insert( std::make_pair(
+            cnx->address(), cnx ) );
+    if ( res.second )
+    {
+        // There was anothe connection in the list, enqueue
+        ClientConnection* oldCnx = res.first->second;
+        cnx->setNext( oldCnx );
+    }
 }
 
 }
