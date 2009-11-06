@@ -62,7 +62,7 @@ protoc_sources = [ 'src/protobuf/src/google/protobuf/compiler/' + x for x in
         java/java_primitive_field.cc java/java_service.cc parser.cc
         python/python_generator.cc main.cc'''.split() ] + protoc_extra_sources
 protoc = env.Program( 'protoc', protoc_sources, 
-                      LIBS=protobuf, 
+                      LIBS=[protobuf, 'pthread'],
                       CXXFLAGS='-Os',
                       CPPFLAGS='-DNDEBUG' )
 
@@ -80,7 +80,7 @@ env.Program( 'distmapServer',
              Glob( 'src/distmap/*.cpp' ) +
              Glob( 'src/distmap/util/*.cpp' ) +
             [ 'src/distmap/distmap.pb.cc' ], 
-            LIBS=protobuf
+            LIBS=[protobuf, 'pthread', 'rt']
            )
 
 
