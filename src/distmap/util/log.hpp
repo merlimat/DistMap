@@ -18,7 +18,10 @@
 
 #ifndef NDEBUG
 #  define DEBUG(msg)  LOG("DEBUG", msg)
-#  define TRACE(msg)  LOG("TRACE", msg)
+#  define TRACE(msg)  { \
+    if ( IsTraceActive(__FILE__) ) \
+        LOG("TRACE", msg); \
+}
 #  define ASSERT(condition)  { \
     if ( ! (condition) ) \
         FATAL( "Assert failed: " #condition ); \
@@ -69,12 +72,19 @@ public:
             ++m_ptr;
     }
 
+    const char* name() const
+    {
+        return m_ptr;
+    }
+
     template<typename Stream>
     friend Stream& operator<<( Stream& s, const SimpleName& sn )
     {
         return s << sn.m_ptr;
     }
 };
+
+bool IsTraceActive( const char* filename );
 
 #define LOG(level,msg) { std::cerr << LogTimestamp() << (" [" level "] (") << SimpleName(__FILE__) << ':' << __LINE__ << ") " << msg << std::endl;  }
 

@@ -14,6 +14,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/smart_ptr.hpp>
 #include <boost/function.hpp>
+#include <boost/foreach.hpp>
 #include <boost/noncopyable.hpp>
 
 namespace distmap
@@ -30,6 +31,8 @@ using boost::bind;
 namespace sys = boost::system;
 
 namespace ptime = boost::posix_time;
+
+#define foreach BOOST_FOREACH
 
 template<typename T>
 class IntrusiveBase

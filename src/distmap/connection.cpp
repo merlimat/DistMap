@@ -16,18 +16,18 @@ namespace distmap
 Connection::Connection( asio::io_service& service ) :
     m_service( service ), m_socket( service )
 {
-    DEBUG( "Connection::Connection()" );
+    TRACE( "Connection::Connection()" );
 }
 
 Connection::~Connection()
 {
     if ( m_socket.is_open() )
     {
-        DEBUG( "Connection::~Connection() " << m_socket.remote_endpoint() );
+        TRACE( "Connection::~Connection() " << m_socket.remote_endpoint() );
     }
     else
     {
-        DEBUG( "Connection::~Connection()" );
+        TRACE( "Connection::~Connection()" );
     }
 }
 
