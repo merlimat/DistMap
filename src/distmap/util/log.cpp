@@ -25,7 +25,8 @@ public:
         char* s = getenv( "TRACE" );
         if ( s != NULL )
         {
-            Tokenizer tokens( std::string(s), sep );
+            std::string str( s );
+            Tokenizer tokens( str, sep );
             foreach( std::string t, tokens )
             {
                 m_set.insert( t );
