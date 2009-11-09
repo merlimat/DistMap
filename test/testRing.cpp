@@ -44,6 +44,10 @@ int main()
     INFO( "Get time: " << time / Gets * 1000 << " ms/node" );
     // INFO( "Node for 'xx': " << ring.node("xx") );
 
-    for ( std::map<std::string,int>::iterator it = map.begin(); it != map.end(); ++it )
-        INFO( it->first << " : " << it->second );
+    distmap::StringList nodes;
+    ring.preferenceList( "xxx", nodes, 3 );
+    for ( distmap::StringList::iterator it = nodes.begin(); it != nodes.end(); ++it )
+        INFO( *it );
+    // for ( std::map<std::string,int>::iterator it = map.begin(); it != map.end(); ++it )
+    //     INFO( it->first << " : " << it->second );
 }

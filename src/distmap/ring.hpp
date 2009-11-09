@@ -11,6 +11,7 @@
 #include <distmap/util/hash.hpp>
 
 #include <set>
+#include <vector>
 #include <string>
 #include <boost/bimap.hpp>
 #include <boost/bimap/multiset_of.hpp>
@@ -18,9 +19,13 @@
 namespace distmap
 {
 
+typedef std::vector<std::string> StringList;
+
 class Ring
 {
 public:
+    typedef std::set<std::string> StringSet;
+
     Ring();
     ~Ring();
 
@@ -30,8 +35,10 @@ public:
 
     const std::string& node( const std::string& key );
 
+    void preferenceList( const std::string& key, StringList& nodes, uint32_t n );
+
 private:
-    typedef std::set<std::string> StringSet;
+
     typedef boost::bimap<
                 boost::bimaps::multiset_of<uint64_t>,
                 boost::bimaps::multiset_of<std::string> >
