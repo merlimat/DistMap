@@ -9,3 +9,5 @@ libprotobuf.a
 build_cache
 *.pb.cc
 *.pb.h
+libdistmap.a
+test/testRing

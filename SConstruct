@@ -27,7 +27,7 @@ if debug:
     env.Append( CXXFLAGS = ' -g3 -ggdb -O0' )
     env.Append( CPPFLAGS = ' -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING' )
 else:
-    env.Append( CXXFLAGS = ' -O3 -finline-limit=800' )
+    env.Append( CXXFLAGS = ' -O3 -g -finline-limit=800' )
     env.Append( CPPFLAGS = ' -DNDEBUG' )
     if platform != 'Darwin':
         env.Append( CXXFLAGS = ' -march=native' )
@@ -73,17 +73,18 @@ obj = env.OptRpcCompiler( ['src/distmap/distmap.pb.h',
                            'src/distmap/distmap.pb.cc'],
                            'distmap.proto' )
 env.Depends( obj, protoc )
-  
-env.Program( 'distmapServer',
-             Glob( 'src/boost_lib/*.cpp' ) +
+
+distmapLib = env.Library( 'distmap', 
+			 Glob( 'src/boost_lib/*.cpp' ) +
              Glob( 'src/google/*.cc' ) + 
              Glob( 'src/distmap/*.cpp' ) +
              Glob( 'src/distmap/util/*.cpp' ) +
-            [ 'src/distmap/distmap.pb.cc' ], 
-            LIBS=[protobuf, 'pthread', 'rt']
-           )
-
-
-    
+             [ 'src/distmap/distmap.pb.cc' ] )
+             
+env.Replace( LIBS = [ distmapLib, 'pthread', 'rt', protobuf] )
+  
+env.Program( 'distmapServer', 'src/distmap/server/main.cpp')
+env.Program( 'test/testRing', 'test/testRing.cpp' )
+   
 
 
