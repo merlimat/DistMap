@@ -65,6 +65,7 @@ void Finder::handleReceiveFrom( const sys::error_code& error, size_t size )
         {
         case Message::Announce:
             m_membership.receivedAnnounce( msg.announce().node() );
+            msg.clear_announce();
             break;
 
         default:

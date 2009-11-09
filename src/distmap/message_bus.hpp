@@ -10,7 +10,6 @@
 
 #include <distmap/asio.hpp>
 #include <distmap/util/log.hpp>
-#include <boost/unordered_map.hpp>
 
 namespace distmap
 {
@@ -30,11 +29,17 @@ public:
             SendReceiveCallback;
 
     ClientConnection( asio::io_service& service,
-                      MessageBus& messageBus,
+                      MessageBus* messageBus,
                       const std::string& address ) :
         ClientConnectionBase( messageBus ), m_socket( service ), m_address(
                 address ), m_error( false )
     {
+        TRACE( "ClientConnection::ClientConnection( " << m_address << " )" );
+    }
+
+    ~ClientConnection()
+    {
+        TRACE( "ClientConnection::~ClientConnection( " << m_address << " )" );
     }
 
     template<typename Callback>
@@ -71,6 +76,19 @@ public:
     bool error() const
     {
         return m_error;
+    }
+
+    void keepAlive()
+    {
+        SharedBuffer buffer( 1 );
+        m_socket.async_read_some( buffer, bind(
+                &ClientConnection::handleKeepAlive, this, ptr(), ph::error,
+                ph::bytes_transferred ) );
+    }
+
+    void cancelKeepAlive()
+    {
+        m_socket.cancel();
     }
 
 private:
@@ -139,6 +157,17 @@ private:
         callback( error, buffer );
     }
 
+    void handleKeepAlive( const ClientConnectionPtr& cnx,
+                          const sys::error_code& error,
+                          size_t )
+    {
+        if ( error && error != asio::error::operation_aborted )
+        {
+            TRACE( "Connection closed by remote host when in pool. " << m_address );
+            m_error = true;
+        }
+    }
+
     tcp::socket m_socket;
     std::string m_address;
     bool m_error;
@@ -163,7 +192,7 @@ public:
                          const SharedBuffer& msg,
                          const SendReceiveCallback& );
 
-    void release( ClientConnection* cnx );
+    void release( const ClientConnectionPtr& cnx );
 
 private:
     ClientConnectionPtr getConnection( const std::string& node );
@@ -180,7 +209,8 @@ private:
 
     asio::io_service& m_service;
 
-    typedef std::map<std::string, ClientConnection*> Pool;
+    typedef std::list<ClientConnectionPtr> ConnectionList;
+    typedef std::map<std::string, ConnectionList> Pool;
     Pool m_pool;
 };
 

@@ -68,12 +68,11 @@ template<typename T, typename Pool>
 class IntrusivePoolBase
 {
     uint32_t m_counter;
-    Pool& m_pool;
-    T* m_next;
+    Pool* m_pool;
 
 public:
-    IntrusivePoolBase( Pool& pool ) :
-        m_counter( 0 ), m_pool( pool ), m_next( 0 )
+    IntrusivePoolBase( Pool* pool ) :
+        m_counter( 0 ), m_pool( pool )
     {
     }
 
@@ -82,27 +81,30 @@ public:
         return boost::intrusive_ptr<T>( static_cast<T*> ( this ) );
     }
 
-    void setNext( T* next )
+    void setPool( Pool* pool )
     {
-        m_next = next;
+        m_pool = pool;
     }
 
-    T* next() const
+    Pool* pool() const
     {
-        return m_next;
+        return m_pool;
     }
 
-    friend inline void intrusive_ptr_add_ref( IntrusivePoolBase<T,Pool>* p )
+    friend inline void intrusive_ptr_add_ref( IntrusivePoolBase<T, Pool>* p )
     {
         p->m_counter++;
     }
 
-    friend inline void intrusive_ptr_release( IntrusivePoolBase<T,Pool>* p )
+    friend inline void intrusive_ptr_release( IntrusivePoolBase<T, Pool>* p )
     {
         p->m_counter--;
         if ( p->m_counter == 0 )
         {
-            p->m_pool.release( static_cast<T*> ( p ) );
+            if ( p->m_pool )
+                p->m_pool->release( p->ptr() );
+            else
+                delete static_cast<T*> ( p );
         }
     }
 };

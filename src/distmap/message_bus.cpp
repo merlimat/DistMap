@@ -15,25 +15,12 @@ namespace distmap
 MessageBus::MessageBus( asio::io_service& service ) :
     m_service( service )
 {
-    TRACE( "ConnectionPool::ConnectionPool" );
+    TRACE( "MessageBus::MessageBus" );
 }
 
 MessageBus::~MessageBus()
 {
-    TRACE( "ConnectionPool::~ConnectionPool" );
-    for ( Pool::iterator it = m_pool.begin(); it != m_pool.end(); ++it )
-    {
-        ClientConnection* cnx = it->second;
-        ClientConnection* nextCnx = cnx->next();
-        delete cnx;
-
-        while ( nextCnx != NULL )
-        {
-            cnx = nextCnx;
-            nextCnx = cnx->next();
-            delete cnx;
-        }
-    }
+    TRACE( "MessageBus::~MessageBus" );
 }
 
 void MessageBus::send( const std::string& node,
@@ -97,39 +84,40 @@ tcp::endpoint MessageBus::getEndpointAddress( const std::string& node ) const
 
 ClientConnectionPtr MessageBus::getConnection( const std::string& address )
 {
-    Pool::iterator it = m_pool.find( address );
-    if ( it == m_pool.end() )
-        return ClientConnectionPtr( new ClientConnection( m_service, *this,
-                address ) );
+    ConnectionList& list = m_pool[address];
 
     // Extract from pool
-    ClientConnection* cnx = it->second;
-    if ( cnx->next() != NULL )
+    ClientConnectionPtr cnx;
+    while ( !list.empty() )
     {
-        m_pool.insert( std::make_pair( address, cnx->next() ) );
-        cnx->setNext( NULL );
+        cnx = list.front();
+        list.pop_front();
+        if ( !cnx->error() )
+        {
+            cnx->cancelKeepAlive();
+            cnx->setPool( this );
+            TRACE( "Connection found open in pool" );
+            return cnx;
+        }
+
+        TRACE( "Connection in pool was remotely closed" );
     }
 
-    return ClientConnectionPtr( cnx );
+    // An open connection was not found in the pool
+    return ClientConnectionPtr( new ClientConnection( m_service, this, address ) );
 }
 
-void MessageBus::release( ClientConnection* cnx )
+void MessageBus::release( const ClientConnectionPtr& cnx )
 {
+    cnx->setPool( NULL );
     if ( cnx->error() )
     {
-        delete cnx;
         return;
     }
 
     TRACE( "Connection released to pool: " << cnx->address() );
-    std::pair<Pool::iterator, bool> res = m_pool.insert( std::make_pair(
-            cnx->address(), cnx ) );
-    if ( res.second )
-    {
-        // There was anothe connection in the list, enqueue
-        ClientConnection* oldCnx = res.first->second;
-        cnx->setNext( oldCnx );
-    }
+    cnx->keepAlive();
+    m_pool[cnx->address()].push_front( cnx );
 }
 
 }
