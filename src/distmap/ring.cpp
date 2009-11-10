@@ -26,6 +26,9 @@ Ring::~Ring()
 
 void Ring::add( const std::string& node, uint32_t n )
 {
+    if ( m_physicalNodes.count( node ) != 0 )
+        return;
+
     TRACE( "added node: " << node << " " << n );
     m_physicalNodes.insert( node );
 
@@ -56,7 +59,9 @@ const std::string& Ring::node( const std::string& key )
     return it->second;
 }
 
-void Ring::preferenceList( const std::string& key, StringList& nodes, uint32_t n )
+void Ring::preferenceList( const std::string& key,
+                           StringList& nodes,
+                           uint32_t n )
 {
     uint64_t hash = StringHash( key.c_str(), key.length() );
     n = std::min<uint32_t>( n, m_physicalNodes.size() );

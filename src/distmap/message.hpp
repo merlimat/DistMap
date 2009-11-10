@@ -9,13 +9,17 @@
 #define MESSAGE_HPP_
 
 #include <distmap/asio.hpp>
+#include <distmap/distmap.pb.h>
+
+#include <set>
 
 namespace distmap
 {
 
-class Message;
+typedef std::set<std::string> StringSet;
 
-void serialize( const SharedBuffer& buffer, const Message& message );
+SharedBuffer CreateNodeListMsg( const StringSet& stringSet );
+SharedBuffer CreateAnnounceMsg( const std::string& node );
 
 }
 

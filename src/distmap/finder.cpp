@@ -80,11 +80,7 @@ void Finder::handleReceiveFrom( const sys::error_code& error, size_t size )
 
 void Finder::announceMyself( const std::string& nodeName )
 {
-    Message msg;
-    msg.set_type( Message::Announce );
-    msg.mutable_announce()->set_node( nodeName );
-
-    SharedBuffer data = writeMessage( msg );
+    SharedBuffer data = CreateAnnounceMsg( nodeName );
     m_socket.async_send_to( data, m_multicastEndpoint, bind(
             &Finder::handleMsgSent, this, ph::error, ph::bytes_transferred ) );
     TRACE( "announce message sent." );

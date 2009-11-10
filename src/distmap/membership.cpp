@@ -8,6 +8,7 @@
 #include "membership.hpp"
 
 #include <distmap/configuration.hpp>
+#include <distmap/message.hpp>
 #include <distmap/message_bus.hpp>
 #include <distmap/util/log.hpp>
 
@@ -47,25 +48,32 @@ void Membership::receivedAnnounce( const std::string& nodeName )
         return;
     }
 
-    INFO( "New node announced: " << nodeName );
+    DEBUG( "New node announced: " << nodeName );
+    m_ring.add( nodeName );
 
     // Send node list to new node
-    Message msg;
-    msg.set_type( Message::NodeList );
-    NodeList* nodeList = msg.mutable_nodelist();
-    nodeList->add_node( m_node );
-    nodeList->add_node( nodeName );
-
-    SharedBuffer data = writeMessageWithSize( msg );
-
+    SharedBuffer data = CreateNodeListMsg( m_ring.physicalNodes() );
     m_messageBus.send( nodeName, data, bind( &Membership::handleMessageSent,
             this, ph::error ) );
+}
+
+void Membership::receivedNodeList( const NodeList& nodeList )
+{
+    m_announceTimer.cancel();
+    for ( int i = 0; i < nodeList.node_size(); i++ )
+    {
+        m_ring.add( nodeList.node( i ) );
+        TRACE( " - Node: " << nodeList.node( i ) );
+    }
+
+    DEBUG( "Node List: " << m_ring.physicalNodes() );
 }
 
 void Membership::announceTimeout( const sys::error_code& error )
 {
     TRACE( "announceTimeout error=" << error.message() );
-    announce();
+    if ( error != asio::error::operation_aborted )
+        announce();
 }
 
 void Membership::handleMessageSent( const sys::error_code& error )

@@ -13,12 +13,14 @@
 namespace distmap
 {
 
+class Membership;
+
 class Connection: public IntrusiveBase<Connection>
 {
 public:
     typedef boost::intrusive_ptr<Connection> ConnectionPtr;
 
-    Connection( asio::io_service& service );
+    Connection( asio::io_service& service, Membership& membership );
     ~Connection();
 
     void start();
@@ -34,6 +36,7 @@ private:
                         size_t size );
 
     asio::io_service& m_service;
+    Membership& m_membership;
     tcp::socket m_socket;
 
     friend class Server;

@@ -88,4 +88,80 @@ bool IsTraceActive( const char* filename );
 
 #define LOG(level,msg) { std::cerr << LogTimestamp() << (" [" level "] (") << SimpleName(__FILE__) << ':' << __LINE__ << ") " << msg << std::endl;  }
 
+/// STL Logging facilities
+
+template<typename Stream, typename First, typename Second>
+inline Stream& operator<<( Stream& out, const std::pair<First, Second>& p )
+{
+    return out << '(' << p.first << ", " << p.second << ')';
+}
+
+template<typename Stream, class Iter>
+inline void PrintSequence( Stream& out, Iter begin, Iter end )
+{
+    using ::operator<<;
+    // Output at most 100 elements -- appropriate if used for logging.
+    for ( int i = 0; begin != end && i < 100; ++i, ++begin )
+    {
+        if ( i > 0 )
+            out << ", ";
+        out << *begin;
+    }
+    if ( begin != end )
+    {
+        out << " ...";
+    }
+}
+
+#define OUTPUT_TWO_ARG_CONTAINER(Sequence) \
+template<typename Stream, typename T1, typename T2> \
+inline Stream& operator<<( Stream& out, \
+                                const Sequence<T1, T2>& seq) { \
+	out << '['; \
+	PrintSequence(out, seq.begin(), seq.end()); \
+	out << ']'; \
+	return out; \
+}
+
+#include <vector>
+#include <deque>
+#include <list>
+
+OUTPUT_TWO_ARG_CONTAINER(std::vector)
+OUTPUT_TWO_ARG_CONTAINER(std::deque)
+OUTPUT_TWO_ARG_CONTAINER(std::list)
+
+#define OUTPUT_THREE_ARG_CONTAINER(Sequence) \
+template<typename Stream, typename T1, typename T2, typename T3> \
+inline Stream& operator<<( Stream& out, \
+                           const Sequence<T1, T2, T3>& seq) { \
+    out << '{'; \
+    PrintSequence(out, seq.begin(), seq.end()); \
+    out << '}'; \
+    return out; \
+}
+
+#include <set>
+
+OUTPUT_THREE_ARG_CONTAINER(std::set)
+OUTPUT_THREE_ARG_CONTAINER(std::multiset)
+
+#undef OUTPUT_THREE_ARG_CONTAINER
+
+#define OUTPUT_FOUR_ARG_CONTAINER(Sequence) \
+template<typename Stream, typename T1, typename T2, typename T3, typename T4> \
+inline Stream& operator<<( Stream& out, \
+                           const Sequence<T1, T2, T3, T4>& seq) { \
+	out << '{'; \
+	PrintSequence(out, seq.begin(), seq.end()); \
+	out << '}'; \
+	return out; \
+}
+
+#include <map>
+
+OUTPUT_FOUR_ARG_CONTAINER(std::map)
+OUTPUT_FOUR_ARG_CONTAINER(std::multimap)
+
+
 #endif /* LOG_HPP_ */

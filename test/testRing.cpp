@@ -50,4 +50,7 @@ int main()
         INFO( *it );
     // for ( std::map<std::string,int>::iterator it = map.begin(); it != map.end(); ++it )
     //     INFO( it->first << " : " << it->second );
+
+    std::string s;
+    INFO( "Size: " << sizeof(s) );
 }

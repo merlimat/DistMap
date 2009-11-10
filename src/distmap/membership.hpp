@@ -11,12 +11,14 @@
 #include <distmap/asio.hpp>
 
 #include <distmap/finder.hpp>
+#include <distmap/ring.hpp>
 
 namespace distmap
 {
 
 class Configuration;
 class MessageBus;
+class NodeList;
 
 class Membership
 {
@@ -31,11 +33,13 @@ public:
     void setNodeName( const std::string& nodeName )
     {
         m_node = nodeName;
+        m_ring.add( m_node );
     }
 
     void announce();
 
     void receivedAnnounce( const std::string& nodeName );
+    void receivedNodeList( const NodeList& nodeList );
 
 private:
     void announceTimeout( const sys::error_code& );
@@ -45,6 +49,7 @@ private:
     Configuration& m_conf;
     MessageBus& m_messageBus;
     Finder m_finder;
+    Ring m_ring;
 
     asio::deadline_timer m_announceTimer;
 

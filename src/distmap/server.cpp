@@ -87,7 +87,7 @@ void Server::bindAddress()
 void Server::startAccept()
 {
 
-    ConnectionPtr cnx( new Connection( m_service ) );
+    ConnectionPtr cnx( new Connection( m_service, m_membership ) );
 
     m_acceptor.async_accept( cnx->socket(), bind( &Server::handleAccept, this,
             cnx, ph::error ) );

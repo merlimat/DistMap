@@ -20,15 +20,31 @@ namespace distmap
 {
 
 typedef std::vector<std::string> StringList;
+typedef std::set<std::string> StringSet;
 
+/**
+ * Represent a set of nodes places on a hash ring. Implements
+ * the Consistent Hashing building block.
+ *
+ * Every node is assigned N virtual points in the hash ring.
+ */
 class Ring
 {
 public:
-    typedef std::set<std::string> StringSet;
-
     Ring();
     ~Ring();
 
+    const StringSet& physicalNodes() const
+    {
+        return m_physicalNodes;
+    }
+
+    /**
+     * Adds a node to the ring
+     *
+     * @param node the node name
+     * @param n the number of virtual nodes to put on the key ring
+     */
     void add( const std::string& node, uint32_t n = 100 );
 
     void remove( const std::string& node );
@@ -39,10 +55,8 @@ public:
 
 private:
 
-    typedef boost::bimap<
-                boost::bimaps::multiset_of<uint64_t>,
-                boost::bimaps::multiset_of<std::string> >
-            StringMap;
+    typedef boost::bimap<boost::bimaps::multiset_of<uint64_t>,
+            boost::bimaps::multiset_of<std::string> > StringMap;
 
     StringSet m_physicalNodes;
     StringMap m_ring;

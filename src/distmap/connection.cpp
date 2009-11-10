@@ -7,14 +7,15 @@
 
 #include "connection.hpp"
 
+#include <distmap/membership.hpp>
 #include <distmap/util/log.hpp>
 #include <distmap/distmap.pb.h>
 
 namespace distmap
 {
 
-Connection::Connection( asio::io_service& service ) :
-    m_service( service ), m_socket( service )
+Connection::Connection( asio::io_service& service, Membership& membership ) :
+    m_service( service ), m_membership( membership ), m_socket( service )
 {
     TRACE( "Connection::Connection()" );
 }
@@ -86,11 +87,7 @@ void Connection::handleReceive( const ConnectionPtr& cnx,
     case Message::NodeList:
     {
         TRACE( "Node list received: " );
-        const NodeList& nodeList = msg.nodelist();
-        for ( int i = 0; i < nodeList.node_size(); i++ )
-        {
-            TRACE( " - Node: " << nodeList.node( i ) );
-        }
+        m_membership.receivedNodeList( msg.nodelist() );
         break;
     }
     default:
