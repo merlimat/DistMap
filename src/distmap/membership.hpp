@@ -11,6 +11,7 @@
 #include <distmap/asio.hpp>
 
 #include <distmap/finder.hpp>
+#include <distmap/monitor.hpp>
 #include <distmap/ring.hpp>
 
 namespace distmap
@@ -41,7 +42,11 @@ public:
     void receivedAnnounce( const std::string& nodeName );
     void receivedNodeList( const NodeList& nodeList );
 
+    void nodeIsDown( const std::string& node );
+
 private:
+    void doMonitoring();
+
     void announceTimeout( const sys::error_code& );
     void handleMessageSent( const sys::error_code& error );
 
@@ -50,6 +55,7 @@ private:
     MessageBus& m_messageBus;
     Finder m_finder;
     Ring m_ring;
+    Monitor m_monitor;
 
     asio::deadline_timer m_announceTimer;
 

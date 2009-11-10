@@ -53,6 +53,9 @@ public:
 
     void preferenceList( const std::string& key, StringList& nodes, uint32_t n );
 
+    const std::string& nextNode( const std::string& node ) const;
+    const std::string& nextPhysicalNode( const std::string& node ) const;
+
 private:
 
     typedef boost::bimap<boost::bimaps::multiset_of<uint64_t>,

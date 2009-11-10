@@ -29,7 +29,7 @@ void Ring::add( const std::string& node, uint32_t n )
     if ( m_physicalNodes.count( node ) != 0 )
         return;
 
-    TRACE( "added node: " << node << " " << n );
+    INFO( "Added node: " << node << " " << n );
     m_physicalNodes.insert( node );
 
     char name[node.length() + 10];
@@ -43,13 +43,14 @@ void Ring::add( const std::string& node, uint32_t n )
 
 void Ring::remove( const std::string& node )
 {
-    TRACE( "removed node: " << node );
+    INFO( "removed node: " << node );
     m_physicalNodes.erase( node );
-    uint32_t n = m_ring.right.erase( node );
+    m_ring.right.erase( node );
 }
 
 const std::string& Ring::node( const std::string& key )
 {
+    ASSERT( ! m_ring.empty() );
     uint64_t hash = StringHash( key.c_str(), key.length() );
 
     StringMap::left_const_iterator it = m_ring.left.lower_bound( hash );
@@ -57,6 +58,28 @@ const std::string& Ring::node( const std::string& key )
         it = m_ring.left.begin();
 
     return it->second;
+}
+
+const std::string& Ring::nextNode( const std::string& node ) const
+{
+    ASSERT( ! m_ring.empty() );
+    uint64_t hash = StringHash( node.c_str(), node.length() );
+    StringMap::left_const_iterator it = m_ring.left.lower_bound( hash );
+    if ( it == m_ring.left.end() )
+        it = m_ring.left.begin();
+
+    return it->second;
+}
+
+const std::string& Ring::nextPhysicalNode( const std::string& node ) const
+{
+    ASSERT( ! m_physicalNodes.empty() );
+    StringSet::const_iterator it = m_physicalNodes.find( node );
+    ++it;
+    if ( it == m_physicalNodes.end() )
+        it = m_physicalNodes.begin();
+
+    return *it;
 }
 
 void Ring::preferenceList( const std::string& key,

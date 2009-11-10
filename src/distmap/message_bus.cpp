@@ -29,8 +29,11 @@ void MessageBus::send( const std::string& node,
 {
     tcp::endpoint endpoint = getEndpointAddress( node );
     ClientConnectionPtr cnx = getConnection( node );
-    cnx->connect( endpoint, bind( &MessageBus::handleConnect, this, cnx, msg,
-            callback, ph::error ) );
+    if ( cnx->socket().is_open() )
+        cnx->send( msg, callback );
+    else
+        cnx->connect( endpoint, bind( &MessageBus::handleConnect, this, cnx,
+                msg, callback, ph::error ) );
 }
 
 void MessageBus::sendAndReceive( const std::string& node,
@@ -39,8 +42,12 @@ void MessageBus::sendAndReceive( const std::string& node,
 {
     tcp::endpoint endpoint = getEndpointAddress( node );
     ClientConnectionPtr cnx = getConnection( node );
-    cnx->connect( endpoint, bind( &MessageBus::handleConnectSendReceive, this,
-            cnx, msg, callback, ph::error ) );
+
+    if ( cnx->socket().is_open() )
+        cnx->sendAndReceive( msg, callback );
+    else
+        cnx->connect( endpoint, bind( &MessageBus::handleConnectSendReceive,
+                this, cnx, msg, callback, ph::error ) );
 }
 
 void MessageBus::handleConnect( const ClientConnectionPtr& cnx,
@@ -65,7 +72,7 @@ void MessageBus::handleConnectSendReceive( const ClientConnectionPtr& cnx,
 {
     if ( error )
     {
-        DEBUG( "Error connecting to " << cnx->address() );
+        DEBUG( "Error connecting to " << cnx->address() << ": " << error.message() );
         callback( error, SharedBuffer() );
         return;
     }

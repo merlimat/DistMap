@@ -35,6 +35,10 @@ private:
                         const sys::error_code& error,
                         size_t size );
 
+    void handleSend( const ConnectionPtr& ptr,
+                     const sys::error_code& error,
+                     size_t size );
+
     asio::io_service& m_service;
     Membership& m_membership;
     tcp::socket m_socket;

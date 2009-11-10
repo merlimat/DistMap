@@ -8,8 +8,11 @@
 #include "connection.hpp"
 
 #include <distmap/membership.hpp>
+#include <distmap/message.hpp>
 #include <distmap/util/log.hpp>
 #include <distmap/distmap.pb.h>
+
+#include <distmap/util/util.hpp>
 
 namespace distmap
 {
@@ -88,15 +91,34 @@ void Connection::handleReceive( const ConnectionPtr& cnx,
     {
         TRACE( "Node list received: " );
         m_membership.receivedNodeList( msg.nodelist() );
+        receiveMessage();
+        break;
+    }
+    case Message::Ping:
+    {
+        TRACE( "Ping msg received" );
+        asio::async_write( m_socket, CreatePongMsg(), bind(
+                &Connection::handleSend, this, cnx, ph::error,
+                ph::bytes_transferred ) );
         break;
     }
     default:
-        ERROR( "Invalid msg received." )
-        ;
+    {
+        ERROR( "Invalid msg received." );
+        dumpBuffer( std::cerr, buffer.data(), buffer.size() );
         break;
     }
+    }
+}
 
-    receiveMessage();
+void Connection::handleSend( const ConnectionPtr& ptr,
+                             const sys::error_code& error,
+                             size_t size )
+{
+    if ( !error )
+    {
+        receiveMessage();
+    }
 }
 
 }

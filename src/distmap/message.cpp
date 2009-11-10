@@ -32,4 +32,20 @@ SharedBuffer CreateAnnounceMsg( const std::string& node )
     return writeMessage( msg );
 }
 
+SharedBuffer CreatePingMsg()
+{
+    Message msg;
+    msg.set_type( Message::Ping );
+    msg.mutable_ping();
+    return writeMessageWithSize( msg );
+}
+
+SharedBuffer CreatePongMsg()
+{
+    Message msg;
+    msg.set_type( Message::Pong );
+    msg.mutable_pong();
+    return writeMessageWithSize( msg );
+}
+
 } // namespace distmap

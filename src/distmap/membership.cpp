@@ -21,7 +21,8 @@ Membership::Membership( asio::io_service& service,
                         Configuration& conf,
                         MessageBus& messageBus ) :
     m_service( service ), m_conf( conf ), m_messageBus( messageBus ), m_finder(
-            service, *this, conf ), m_announceTimer( service )
+            service, *this, conf ), m_monitor( service, *this, messageBus ),
+            m_announceTimer( service )
 {
     TRACE( "Membership::Membership() -- NodeName: " << m_conf.nodeName() );
 }
@@ -51,10 +52,17 @@ void Membership::receivedAnnounce( const std::string& nodeName )
     DEBUG( "New node announced: " << nodeName );
     m_ring.add( nodeName );
 
+    doMonitoring();
+
     // Send node list to new node
-    SharedBuffer data = CreateNodeListMsg( m_ring.physicalNodes() );
-    m_messageBus.send( nodeName, data, bind( &Membership::handleMessageSent,
-            this, ph::error ) );
+    if ( m_ring.nextNode( nodeName ) == m_node )
+    {
+        // Only one node will send the complete list to
+        // the newcomer
+        SharedBuffer data = CreateNodeListMsg( m_ring.physicalNodes() );
+        m_messageBus.send( nodeName, data, bind(
+                &Membership::handleMessageSent, this, ph::error ) );
+    }
 }
 
 void Membership::receivedNodeList( const NodeList& nodeList )
@@ -66,6 +74,7 @@ void Membership::receivedNodeList( const NodeList& nodeList )
         TRACE( " - Node: " << nodeList.node( i ) );
     }
 
+    doMonitoring();
     DEBUG( "Node List: " << m_ring.physicalNodes() );
 }
 
@@ -79,6 +88,27 @@ void Membership::announceTimeout( const sys::error_code& error )
 void Membership::handleMessageSent( const sys::error_code& error )
 {
 
+}
+
+void Membership::nodeIsDown( const std::string& node )
+{
+    TRACE( "Node is down: " << node );
+    m_finder.nodeIsDown( node );
+    m_ring.remove( node );
+
+    doMonitoring();
+}
+
+void Membership::doMonitoring()
+{
+    const std::string& nextNode = m_ring.nextPhysicalNode( m_node );
+    if ( nextNode == m_node )
+    {
+        m_monitor.stopMonitoring();
+        announce();
+    }
+    else
+        m_monitor.startMonitoring( nextNode );
 }
 
 } // namespace distmap

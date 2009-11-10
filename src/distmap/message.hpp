@@ -21,6 +21,9 @@ typedef std::set<std::string> StringSet;
 SharedBuffer CreateNodeListMsg( const StringSet& stringSet );
 SharedBuffer CreateAnnounceMsg( const std::string& node );
 
+SharedBuffer CreatePingMsg();
+SharedBuffer CreatePongMsg();
+
 }
 
 #endif /* MESSAGE_HPP_ */

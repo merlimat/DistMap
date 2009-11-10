@@ -9,12 +9,9 @@
 
 #include <distmap/configuration.hpp>
 #include <distmap/membership.hpp>
+#include <distmap/message.hpp>
 #include <distmap/util/log.hpp>
 #include <distmap/distmap.pb.h>
-
-#include <time.h>
-#include <unistd.h>
-#include <google/utilities.h>
 
 namespace distmap
 {
@@ -65,7 +62,6 @@ void Finder::handleReceiveFrom( const sys::error_code& error, size_t size )
         {
         case Message::Announce:
             m_membership.receivedAnnounce( msg.announce().node() );
-            msg.clear_announce();
             break;
 
         default:
