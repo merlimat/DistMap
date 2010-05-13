@@ -15,9 +15,9 @@ conf = Configure(env)
 env = conf.Finish()
 
 env.Append( CPPPATH = ['src', 'include', 'src/boost'] )
-env.Append( CXXFLAGS = ' -Wall -Wextra -Wno-unused-parameter' )
+env.Append( CXXFLAGS = ' -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers' )
 
-env.Append( CPPFLAGS = ' -DBOOST_DISABLE_THREADS' )
+env.Append( CPPFLAGS = ' -DBOOST_DISABLE_THREADS -DBOOST_LOG_NO_THREADS' )
  
 platform = os.uname()[0]
 if platform != 'Darwin':
@@ -27,7 +27,7 @@ if debug:
     env.Append( CXXFLAGS = ' -g3 -ggdb -O0' )
     env.Append( CPPFLAGS = ' -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING' )
 else:
-    env.Append( CXXFLAGS = ' -O3 -g -finline-limit=800' )
+    env.Append( CXXFLAGS = '-Os' ) # -O3 -g -finline-limit=800' )
     env.Append( CPPFLAGS = ' -DNDEBUG' )
     if platform != 'Darwin':
         env.Append( CXXFLAGS = ' -march=native' )
@@ -64,7 +64,7 @@ protoc_sources = [ 'src/protobuf/src/google/protobuf/compiler/' + x for x in
         plugin.pb.cc subprocess.cc'''.split() ] + protoc_extra_sources
 protoc = env.Program( 'protoc', protoc_sources, 
                       LIBS=[protobuf, 'pthread'],
-                      CXXFLAGS='-Os',
+                      CXXFLAGS='-O0',
                       CPPFLAGS='-DNDEBUG' )
 
 bld = Builder(action = './protoc --cpp_out=src/distmap $SOURCE')
@@ -79,7 +79,7 @@ distmapSources = Glob( 'src/google/*.cc' ) + \
                 Glob( 'src/distmap/*.cpp' ) + \
                 Glob( 'src/distmap/util/*.cpp' ) + \
                 [ 'src/distmap/distmap.pb.cc' ]
-boostLibs = ('system',)
+boostLibs = ('system', 'log')
 for lib in boostLibs:
     distmapSources += Glob( 'src/boost/libs/%s/src/*.cpp' % lib )
     
