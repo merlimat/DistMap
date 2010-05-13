@@ -14,7 +14,7 @@ conf = Configure(env)
 #    Exit(1)
 env = conf.Finish()
 
-env.Append( CPPPATH = ['src', 'include'] )
+env.Append( CPPPATH = ['src', 'include', 'src/boost'] )
 env.Append( CXXFLAGS = ' -Wall -Wextra -Wno-unused-parameter' )
 
 env.Append( CPPFLAGS = ' -DBOOST_DISABLE_THREADS' )
@@ -75,12 +75,15 @@ obj = env.OptRpcCompiler( ['src/distmap/distmap.pb.h',
                            'distmap.proto' )
 env.Depends( obj, protoc )
 
-distmapLib = env.Library( 'distmap', 
-			 Glob( 'src/boost_lib/*.cpp' ) +
-             Glob( 'src/google/*.cc' ) + 
-             Glob( 'src/distmap/*.cpp' ) +
-             Glob( 'src/distmap/util/*.cpp' ) +
-             [ 'src/distmap/distmap.pb.cc' ] )
+distmapSources = Glob( 'src/google/*.cc' ) + \
+                Glob( 'src/distmap/*.cpp' ) + \
+                Glob( 'src/distmap/util/*.cpp' ) + \
+                [ 'src/distmap/distmap.pb.cc' ]
+boostLibs = ('system',)
+for lib in boostLibs:
+    distmapSources += Glob( 'src/boost/libs/%s/src/*.cpp' % lib )
+    
+distmapLib = env.Library( 'distmap', distmapSources )
 
 env.Replace( LIBS = [ distmapLib, 'pthread', protobuf] )
 if platform != 'Darwin':

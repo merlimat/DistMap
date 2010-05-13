@@ -10,6 +10,6 @@ build_cache
 *.pb.cc
 *.pb.h
 libdistmap.a
-test/testRing
-build_cache
+/test/testRing
 *.a
+/build_cache
