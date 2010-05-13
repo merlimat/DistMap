@@ -80,8 +80,10 @@ distmapLib = env.Library( 'distmap',
              Glob( 'src/distmap/*.cpp' ) +
              Glob( 'src/distmap/util/*.cpp' ) +
              [ 'src/distmap/distmap.pb.cc' ] )
-             
-env.Replace( LIBS = [ distmapLib, 'pthread', 'rt', protobuf] )
+
+env.Replace( LIBS = [ distmapLib, 'pthread', protobuf] )
+if platform != 'Darwin':
+    env.Append( LIBS = ['rt'] )
   
 env.Program( 'distmapServer', 'src/distmap/server/main.cpp')
 env.Program( 'test/testRing', 'test/testRing.cpp' )
