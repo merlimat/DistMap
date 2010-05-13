@@ -60,7 +60,8 @@ protoc_sources = [ 'src/protobuf/src/google/protobuf/compiler/' + x for x in
         java/java_file.cc java/java_generator.cc java/java_helpers.cc                
         java/java_message.cc java/java_message_field.cc importer.cc 
         java/java_primitive_field.cc java/java_service.cc parser.cc
-        python/python_generator.cc main.cc'''.split() ] + protoc_extra_sources
+        python/python_generator.cc main.cc zip_writer.cc
+        plugin.pb.cc subprocess.cc'''.split() ] + protoc_extra_sources
 protoc = env.Program( 'protoc', protoc_sources, 
                       LIBS=[protobuf, 'pthread'],
                       CXXFLAGS='-Os',

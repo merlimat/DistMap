@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="7.10"
-	Name="gtest_env_var_test_"
-	ProjectGUID="{569C6F70-F41C-47F3-A622-8A88DC43D452}"
+	Name="gtest_unittest-md"
+	ProjectGUID="{4D9FDFB5-986A-4139-823C-F4EE0ED481A2}"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
@@ -12,8 +12,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="Debug"
-			IntermediateDirectory="Debug"
+			OutputDirectory="$(SolutionName)/$(ConfigurationName)"
+			IntermediateDirectory="$(OutDir)/$(ProjectName)"
 			ConfigurationType="1"
 			CharacterSet="2">
 			<Tool
@@ -25,16 +25,16 @@
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="3"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="TRUE"
+				Detect64BitPortabilityProblems="FALSE"
 				DebugInformationFormat="4"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(OutDir)/gtest_env_var_test_.exe"
+				OutputFile="$(OutDir)/gtest_unittest.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
-				ProgramDatabaseFile="$(OutDir)/gtest_env_var_test_.pdb"
+				ProgramDatabaseFile="$(OutDir)/gtest_unittest.pdb"
 				SubSystem="1"
 				TargetMachine="1"/>
 			<Tool
@@ -60,8 +60,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="Release"
-			IntermediateDirectory="Release"
+			OutputDirectory="$(SolutionName)/$(ConfigurationName)"
+			IntermediateDirectory="$(OutDir)/$(ProjectName)"
 			ConfigurationType="1"
 			CharacterSet="2">
 			<Tool
@@ -70,13 +70,13 @@
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="3"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="TRUE"
+				Detect64BitPortabilityProblems="FALSE"
 				DebugInformationFormat="3"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(OutDir)/gtest_env_var_test_.exe"
+				OutputFile="$(OutDir)/gtest_unittest.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
@@ -107,8 +107,8 @@
 	</Configurations>
 	<References>
 		<ProjectReference
-			ReferencedProjectIdentifier="{C8F6C172-56F2-4E76-B5FA-C3B423B31BE7}"
-			Name="gtest"/>
+			ReferencedProjectIdentifier="{3AF54C8A-10BF-4332-9147-F68ED9862033}"
+			Name="gtest_main-md"/>
 	</References>
 	<Files>
 		<Filter
@@ -116,13 +116,16 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
-				RelativePath="..\test\gtest_env_var_test_.cc">
+				RelativePath="..\test\gtest_unittest.cc">
 				<FileConfiguration
 					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
+						Optimization="1"
 						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\include&quot;"
-						UsePrecompiledHeader="0"/>
+						BasicRuntimeChecks="0"
+						UsePrecompiledHeader="0"
+						DebugInformationFormat="3"/>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32">

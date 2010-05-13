@@ -11,3 +11,5 @@ build_cache
 *.pb.h
 libdistmap.a
 test/testRing
+build_cache
+*.a
