@@ -75,17 +75,17 @@ obj = env.OptRpcCompiler( ['src/distmap/distmap.pb.h',
                            'distmap.proto' )
 env.Depends( obj, protoc )
 
+boostLibs = ('system', 'log')
+boostSources = [ Glob( 'src/boost/libs/%s/src/*.cpp' % lib ) for lib in boostLibs ]
+boost = env.Library( 'boost', boostSources )
+
 distmapSources = Glob( 'src/google/*.cc' ) + \
                 Glob( 'src/distmap/*.cpp' ) + \
                 Glob( 'src/distmap/util/*.cpp' ) + \
-                [ 'src/distmap/distmap.pb.cc' ]
-boostLibs = ('system', 'log')
-for lib in boostLibs:
-    distmapSources += Glob( 'src/boost/libs/%s/src/*.cpp' % lib )
-    
+                [ 'src/distmap/distmap.pb.cc' ]   
 distmapLib = env.Library( 'distmap', distmapSources )
 
-env.Replace( LIBS = [ distmapLib, 'pthread', protobuf] )
+env.Replace( LIBS = [ distmapLib, protobuf, boost] )
 if platform != 'Darwin':
     env.Append( LIBS = ['rt'] )
   
