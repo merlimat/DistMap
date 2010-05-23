@@ -53,8 +53,11 @@ public:
     template<typename Stream>
     friend Stream& operator<<( Stream& s, const LogTimestamp& ts )
     {
-        s.setf( std::ios::fixed );
-        s << std::setprecision( 6 ) << ts.m_time;
+        char buf[32];
+        snprintf( buf, sizeof(buf), "%.6f", ts.m_time );
+        s << buf;
+        // s.setf( std::ios::fixed );
+        // s << std::setprecision( 6 ) << ts.m_time;
         return s;
     }
 };

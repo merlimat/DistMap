@@ -36,10 +36,8 @@ void Monitor::startMonitoring( const std::string& node )
 
     TRACE( "Monitoring node " << node );
     m_monitoredNode = node;
-    m_messageBus.sendAndReceive( node, CreatePingMsg(), bind(
-            &Monitor::handlePing, this, node, _1, _2 ) );
-    m_timer.expires_from_now( ptime::seconds( 5 ) );
-    m_timer.async_wait( bind( &Monitor::handleTimeout, this, node, ph::error ) );
+
+    handleSendNextPing( node, sys::error_code() );
 }
 
 void Monitor::stopMonitoring()
@@ -104,8 +102,17 @@ void Monitor::handleSendNextPing( const std::string& node,
     if ( error != asio::error::operation_aborted && node == m_monitoredNode )
     {
         TRACE( "Send next ping to: " << node );
-        m_messageBus.sendAndReceive( node, CreatePingMsg(), bind(
-                &Monitor::handlePing, this, node, _1, _2 ) );
+
+        SharedBuffer msg;
+        if ( !m_membership.hasChanged() )
+            msg = CreatePingMsg();
+        else {
+            DEBUG( "Resending the node list with ping message" );
+            msg = CreatePingMsg( m_membership.nodeList() );
+        }
+
+        m_messageBus.sendAndReceive( node, msg, bind( &Monitor::handlePing,
+                this, node, _1, _2 ) );
         m_timer.expires_from_now( ptime::seconds( 5 ) );
         m_timer.async_wait( bind( &Monitor::handleTimeout, this, node,
                 ph::error ) );

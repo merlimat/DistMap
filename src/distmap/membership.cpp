@@ -17,12 +17,17 @@
 namespace distmap
 {
 
+enum {
+    TimeoutWhenAlone = 5,
+    TimeoutNextAnnounce = 60,
+};
+
 Membership::Membership( asio::io_service& service,
                         Configuration& conf,
                         MessageBus& messageBus ) :
     m_service( service ), m_conf( conf ), m_messageBus( messageBus ), m_finder(
             service, *this, conf ), m_monitor( service, *this, messageBus ),
-            m_announceTimer( service )
+            m_announceTimer( service ), m_nextAnnounceTimer( service )
 {
     TRACE( "Membership::Membership() -- NodeName: " << m_conf.nodeName() );
 }
@@ -32,11 +37,17 @@ Membership::~Membership()
     TRACE( "Membership::~Membership()" );
 }
 
+void Membership::setNodeName( const std::string& nodeName )
+{
+    m_node = nodeName;
+    m_ring.add( m_node );
+}
+
 void Membership::announce()
 {
     DEBUG( "Announce myself to multicast channel. nodeName=" << m_node );
     m_finder.announceMyself( m_node );
-    m_announceTimer.expires_from_now( ptime::seconds( 3 ) );
+    m_announceTimer.expires_from_now( ptime::seconds( TimeoutWhenAlone ) );
     m_announceTimer.async_wait( bind( &Membership::announceTimeout, this,
             ph::error ) );
 }
@@ -68,6 +79,7 @@ void Membership::receivedAnnounce( const std::string& nodeName )
 void Membership::receivedNodeList( const NodeList& nodeList )
 {
     m_announceTimer.cancel();
+
     for ( int i = 0; i < nodeList.node_size(); i++ )
     {
         m_ring.add( nodeList.node( i ) );
@@ -76,6 +88,11 @@ void Membership::receivedNodeList( const NodeList& nodeList )
 
     doMonitoring();
     DEBUG( "Node List: " << m_ring.physicalNodes() );
+
+    // Schedule next announce
+    m_nextAnnounceTimer.expires_from_now( ptime::seconds( TimeoutNextAnnounce ) );
+    m_nextAnnounceTimer.async_wait( bind( &Membership::announceTimeout, this,
+            ph::error ) );
 }
 
 void Membership::announceTimeout( const sys::error_code& error )
@@ -105,10 +122,21 @@ void Membership::doMonitoring()
     if ( nextNode == m_node )
     {
         m_monitor.stopMonitoring();
+        m_nextAnnounceTimer.cancel();
         announce();
     }
     else
         m_monitor.startMonitoring( nextNode );
+}
+
+const StringSet& Membership::nodeList() const
+{
+    return m_ring.physicalNodes();
+}
+
+bool Membership::hasChanged()
+{
+    return m_ring.hasChanged();
 }
 
 } // namespace distmap

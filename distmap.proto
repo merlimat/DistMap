@@ -7,16 +7,20 @@ message Announce {
     required string node = 1;
 }
 
-message Ping {}
-
-message Pong {}
-
 message NodeIsDown {
     required string node = 1; 
 }
 
 message NodeList {
     repeated string node = 1; 
+}
+
+message Ping {
+    optional NodeList nodeList = 6; 
+}
+
+message Pong {
+    optional NodeList nodeList = 6;
 }
 
 message Message {

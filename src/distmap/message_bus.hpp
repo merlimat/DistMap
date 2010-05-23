@@ -105,68 +105,18 @@ private:
     void handleSendReceive( const ClientConnectionPtr& cnx,
                             const SendReceiveCallback& callback,
                             const sys::error_code& error,
-                            size_t )
-    {
-        if ( error )
-        {
-            TRACE( "Error writing data: " << error.message() );
-            m_error = true;
-            callback( error, SharedBuffer() );
-            return;
-        }
-
-        // Read the response from server
-        SharedBuffer buffer;
-        m_socket.async_read_some( buffer, bind(
-                &ClientConnection::handleReceive, this, cnx, buffer, callback,
-                true, ph::error, ph::bytes_transferred ) );
-    }
+                            size_t );
 
     void handleReceive( const ClientConnectionPtr& cnx,
                         SharedBuffer& buffer,
                         const SendReceiveCallback& callback,
                         bool isFirstPart,
                         const sys::error_code& error,
-                        size_t size )
-    {
-        if ( error || size == 0 )
-        {
-            TRACE( "Error reading data: " << error.message() );
-            m_error = true;
-            callback( error, buffer );
-            return;
-        }
-
-        if ( isFirstPart )
-        {
-            uint32_t msgSize = readMessageSize( buffer );
-            TRACE( "Msg size: " << msgSize << " -- Read Size: " << size );
-
-            if ( msgSize > size )
-            {
-                // Schedule a complete read
-                buffer.resize( msgSize );
-                asio::async_read( m_socket, asio::buffer( buffer.data() + size,
-                        msgSize - size ), bind(
-                        &ClientConnection::handleReceive, this, cnx, buffer,
-                        callback, false, ph::error, ph::bytes_transferred ) );
-                return;
-            }
-        }
-
-        callback( error, buffer );
-    }
+                        size_t size );
 
     void handleKeepAlive( const ClientConnectionPtr& cnx,
                           const sys::error_code& error,
-                          size_t )
-    {
-        if ( error && error != asio::error::operation_aborted )
-        {
-            TRACE( "Connection closed by remote host when in pool. " << m_address );
-            m_error = true;
-        }
-    }
+                          size_t );
 
     tcp::socket m_socket;
     std::string m_address;

@@ -78,7 +78,6 @@ void Server::bindAddress()
         return;
     }
 
-
     m_conf.setListenEndpoint( m_acceptor.local_endpoint().address(),
             m_acceptor.local_endpoint().port() );
     m_acceptor.listen();

@@ -65,8 +65,7 @@ void Finder::handleReceiveFrom( const sys::error_code& error, size_t size )
             break;
 
         default:
-            WARN( "Invalid message received from multicast channel." )
-            ;
+            WARN( "Invalid message received from multicast channel." );
             break;
         }
     }

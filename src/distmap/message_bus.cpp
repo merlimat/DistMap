@@ -80,6 +80,72 @@ void MessageBus::handleConnectSendReceive( const ClientConnectionPtr& cnx,
     cnx->sendAndReceive( msg, callback );
 }
 
+void ClientConnection::handleReceive( const ClientConnectionPtr& cnx,
+                                SharedBuffer& buffer,
+                                const SendReceiveCallback& callback,
+                                bool isFirstPart,
+                                const sys::error_code& error,
+                                size_t size )
+{
+    if ( error || size == 0 )
+    {
+        TRACE( "Error reading data: " << error.message() );
+        m_error = true;
+        callback( error, buffer );
+        return;
+    }
+
+    if ( isFirstPart )
+    {
+        uint32_t msgSize = readMessageSize( buffer );
+        TRACE( "Msg size: " << msgSize << " -- Read Size: " << size );
+
+        if ( msgSize > size )
+        {
+            // Schedule a complete read
+            buffer.resize( msgSize );
+            asio::async_read( m_socket, asio::buffer( buffer.data() + size,
+                    msgSize - size ), bind( &ClientConnection::handleReceive,
+                    this, cnx, buffer, callback, false, ph::error,
+                    ph::bytes_transferred ) );
+            return;
+        }
+    }
+
+    callback( error, buffer );
+}
+
+void ClientConnection::handleKeepAlive( const ClientConnectionPtr& cnx,
+                                  const sys::error_code& error,
+                                  size_t )
+{
+    if ( error && error != asio::error::operation_aborted )
+    {
+        TRACE( "Connection closed by remote host when in pool. " << m_address );
+        m_error = true;
+    }
+}
+
+void ClientConnection::handleSendReceive( const ClientConnectionPtr& cnx,
+                                    const SendReceiveCallback& callback,
+                                    const sys::error_code& error,
+                                    size_t )
+{
+    if ( error )
+    {
+        TRACE( "Error writing data: " << error.message() );
+        m_error = true;
+        callback( error, SharedBuffer() );
+        return;
+    }
+
+    // Read the response from server
+    SharedBuffer buffer;
+    m_socket.async_read_some( buffer,
+            bind( &ClientConnection::handleReceive, this, cnx, buffer,
+                    callback, true, ph::error, ph::bytes_transferred ) );
+}
+
 tcp::endpoint MessageBus::getEndpointAddress( const std::string& node ) const
 {
     size_t idx = node.find( ':' );

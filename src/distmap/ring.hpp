@@ -56,6 +56,8 @@ public:
     const std::string& nextNode( const std::string& node ) const;
     const std::string& nextPhysicalNode( const std::string& node ) const;
 
+    bool hasChanged();
+
 private:
 
     typedef boost::bimap<boost::bimaps::multiset_of<uint64_t>,
@@ -63,6 +65,7 @@ private:
 
     StringSet m_physicalNodes;
     StringMap m_ring;
+    bool m_hasChanged;
 };
 
 }

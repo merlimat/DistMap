@@ -14,7 +14,8 @@
 namespace distmap
 {
 
-Ring::Ring()
+Ring::Ring() :
+    m_hasChanged( false )
 {
     TRACE( "Ring::Ring()" );
 }
@@ -39,13 +40,18 @@ void Ring::add( const std::string& node, uint32_t n )
         uint64_t hash = StringHash( name, len );
         m_ring.insert( StringMap::value_type( hash, node ) );
     }
+
+    m_hasChanged = true;
 }
 
 void Ring::remove( const std::string& node )
 {
     INFO( "removed node: " << node );
     m_physicalNodes.erase( node );
-    m_ring.right.erase( node );
+    size_t deleted = m_ring.right.erase( node );
+
+    if ( deleted > 0 )
+        m_hasChanged = true;
 }
 
 const std::string& Ring::node( const std::string& key )
@@ -105,6 +111,13 @@ void Ring::preferenceList( const std::string& key,
 
         ++it;
     }
+}
+
+bool Ring::hasChanged()
+{
+    bool wasChanged = m_hasChanged;
+    m_hasChanged = false;
+    return wasChanged;
 }
 
 }

@@ -30,12 +30,7 @@ public:
     ~Membership();
 
     const std::string& selfNode();
-
-    void setNodeName( const std::string& nodeName )
-    {
-        m_node = nodeName;
-        m_ring.add( m_node );
-    }
+    void setNodeName( const std::string& nodeName );
 
     void announce();
 
@@ -43,6 +38,9 @@ public:
     void receivedNodeList( const NodeList& nodeList );
 
     void nodeIsDown( const std::string& node );
+
+    const StringSet& nodeList() const;
+    bool hasChanged();
 
 private:
     void doMonitoring();
@@ -58,6 +56,7 @@ private:
     Monitor m_monitor;
 
     asio::deadline_timer m_announceTimer;
+    asio::deadline_timer m_nextAnnounceTimer;
 
     std::string m_node;
 };
