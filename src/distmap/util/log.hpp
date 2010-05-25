@@ -13,6 +13,7 @@
 #include <iomanip>
 #include <cstring>
 #include <cassert>
+#include <stdio.h>
 
 #include <google/utilities.h>
 

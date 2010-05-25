@@ -69,7 +69,10 @@ void Monitor::handlePing( const std::string& node,
     {
     case Message::Pong:
     {
-        TRACE( "Receive Pong message from " << node );
+        TRACE( "Receive Pong message from " << node << " -- With nodelist=" << msg.pong().has_nodelist() );
+        if ( msg.ping().has_nodelist() )
+            m_membership.receivedNodeList( msg.pong().nodelist() );
+
         m_timer.expires_from_now( ptime::seconds( 5 ) );
         m_timer.async_wait( bind( &Monitor::handleSendNextPing, this, node,
                 ph::error ) );
@@ -77,7 +80,8 @@ void Monitor::handlePing( const std::string& node,
     }
     default:
     {
-        WARN( "Invalid message received from monitored node: " << node );
+        WARN( "Invalid message received from monitored node: " << node
+                << " type=" << msg.type() );
         m_monitoredNode = "";
         m_membership.nodeIsDown( node );
         break;

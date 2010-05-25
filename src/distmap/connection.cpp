@@ -97,9 +97,18 @@ void Connection::handleReceive( const ConnectionPtr& cnx,
     case Message::Ping:
     {
         TRACE( "Ping msg received" );
-        asio::async_write( m_socket, CreatePongMsg(), bind(
-                &Connection::handleSend, this, cnx, ph::error,
-                ph::bytes_transferred ) );
+        SharedBuffer buffer;
+        if ( !msg.ping().has_nodelist() )
+            buffer = CreatePongMsg();
+        else
+        {
+            m_membership.receivedNodeList( msg.ping().nodelist() );
+            DEBUG( "Resending the node list with pong message" );
+            buffer = CreatePongMsg( m_membership.nodeList() );
+        }
+
+        asio::async_write( m_socket, buffer, bind( &Connection::handleSend,
+                this, cnx, ph::error, ph::bytes_transferred ) );
         break;
     }
     default:
