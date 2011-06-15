@@ -8,14 +8,9 @@ CacheDir( 'build_cache' )
 debug = int( ARGUMENTS.get('debug', 0) )
 env = Environment( ENV=os.environ )
 
-conf = Configure(env)
-# if not conf.CheckHeader( 'boost/asio.hpp' ):
-#    print ' === Boost libraries not found === '
-#    Exit(1)
-env = conf.Finish()
-
+env.Replace( CXX = '/usr/local/bin/g++-4.6' )
 env.Append( CPPPATH = ['src', 'include', 'src/boost'] )
-env.Append( CXXFLAGS = ' -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers' )
+env.Append( CXXFLAGS = ' --std=c++0x -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wno-strict-aliasing' )
 
 env.Append( CPPFLAGS = ' -DBOOST_DISABLE_THREADS -DBOOST_LOG_NO_THREADS' )
  
@@ -27,15 +22,14 @@ if debug:
     env.Append( CXXFLAGS = ' -g3 -ggdb -O0' )
     env.Append( CPPFLAGS = ' -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING' )
 else:
-    env.Append( CXXFLAGS = '-Os' ) # -O3 -g -finline-limit=800' )
+    env.Append( CXXFLAGS = ' -O3 -g0 -finline-limit=800' )
     env.Append( CPPFLAGS = ' -DNDEBUG' )
-    if platform != 'Darwin':
-        env.Append( CXXFLAGS = ' -march=native' )
+    env.Append( CXXFLAGS = ' -march=native' )
         
 env.Append( CPPPATH=['src/protobuf/src'] )
 
 protobuf_sources = [ 'src/protobuf/src/google/protobuf/' + x for x in
-        '''stubs/common.cc stubs/once.cc stubs/hash.cc stubs/strutil.cc 
+        '''stubs/common.cc stubs/once.cc stubs/strutil.cc 
         extension_set.cc 
         generated_message_util.cc message_lite.cc repeated_field.cc 
         wire_format_lite.cc io/coded_stream.cc io/zero_copy_stream.cc
@@ -61,6 +55,7 @@ protoc_sources = [ 'src/protobuf/src/google/protobuf/compiler/' + x for x in
         java/java_message.cc java/java_message_field.cc importer.cc 
         java/java_primitive_field.cc java/java_service.cc parser.cc
         python/python_generator.cc main.cc zip_writer.cc
+        java/java_string_field.cc
         plugin.pb.cc subprocess.cc'''.split() ] + protoc_extra_sources
 protoc = env.Program( 'protoc', protoc_sources, 
                       LIBS=[protobuf, 'pthread'],
