@@ -16,7 +16,7 @@ SharedBuffer CreateNodeListMsg( const StringSet& stringSet )
     msg.set_type( Message::NodeList );
     NodeList* nodeList = msg.mutable_nodelist();
 
-    foreach ( const std::string& node, stringSet )
+    for ( const std::string& node : stringSet )
         nodeList->add_node( node );
 
     return writeMessageWithSize( msg );
@@ -41,7 +41,7 @@ SharedBuffer CreatePingMsg( const StringSet& nodeList )
     {
         NodeList* list = ping->mutable_nodelist();
 
-        foreach ( const std::string& node, nodeList )
+        for ( const std::string& node : nodeList )
             list->add_node( node );
     }
     return writeMessageWithSize( msg );
@@ -57,7 +57,7 @@ SharedBuffer CreatePongMsg( const StringSet& nodeList )
     {
         NodeList* list = pong->mutable_nodelist();
 
-        foreach ( const std::string& node, nodeList )
+        for ( const std::string& node : nodeList )
             list->add_node( node );
     }
 

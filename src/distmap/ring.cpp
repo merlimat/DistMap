@@ -8,8 +8,7 @@
 #include "ring.hpp"
 
 #include <distmap/util/log.hpp>
-
-#include <stdio.h>
+#include <sstream>
 
 namespace distmap
 {
@@ -33,11 +32,12 @@ void Ring::add( const std::string& node, uint32_t n )
     INFO( "Added node: " << node << " " << n );
     m_physicalNodes.insert( node );
 
-    char name[node.length() + 10];
+    std::stringstream ss;
     for ( uint32_t i = 0; i < n; i++ )
     {
-        int len = snprintf( name, sizeof(name), "%s_%u", node.c_str(), i );
-        uint64_t hash = StringHash( name, len );
+        ss << node << '_' << i;
+        uint64_t hash = StringHash( ss.str() );
+        ss.clear();
         m_ring.insert( StringMap::value_type( hash, node ) );
     }
 
@@ -57,9 +57,9 @@ void Ring::remove( const std::string& node )
 const std::string& Ring::node( const std::string& key )
 {
     ASSERT( ! m_ring.empty() );
-    uint64_t hash = StringHash( key.c_str(), key.length() );
+    uint64_t hash = StringHash( key );
 
-    StringMap::left_const_iterator it = m_ring.left.lower_bound( hash );
+    auto it = m_ring.left.lower_bound( hash );
     if ( it == m_ring.left.end() )
         it = m_ring.left.begin();
 
@@ -69,8 +69,8 @@ const std::string& Ring::node( const std::string& key )
 const std::string& Ring::nextNode( const std::string& node ) const
 {
     ASSERT( ! m_ring.empty() );
-    uint64_t hash = StringHash( node.c_str(), node.length() );
-    StringMap::left_const_iterator it = m_ring.left.lower_bound( hash );
+    uint64_t hash = StringHash( node );
+    auto it = m_ring.left.lower_bound( hash );
     if ( it == m_ring.left.end() )
         it = m_ring.left.begin();
 
@@ -80,7 +80,7 @@ const std::string& Ring::nextNode( const std::string& node ) const
 const std::string& Ring::nextPhysicalNode( const std::string& node ) const
 {
     ASSERT( ! m_physicalNodes.empty() );
-    StringSet::const_iterator it = m_physicalNodes.find( node );
+    auto it = m_physicalNodes.find( node );
     ++it;
     if ( it == m_physicalNodes.end() )
         it = m_physicalNodes.begin();
@@ -92,12 +92,12 @@ void Ring::preferenceList( const std::string& key,
                            StringList& nodes,
                            uint32_t n )
 {
-    uint64_t hash = StringHash( key.c_str(), key.length() );
+    uint64_t hash = StringHash( key );
     n = std::min<uint32_t>( n, m_physicalNodes.size() );
 
     StringSet set;
 
-    StringMap::left_const_iterator it = m_ring.left.lower_bound( hash );
+    auto it = m_ring.left.lower_bound( hash );
     while ( nodes.size() < n )
     {
         if ( it == m_ring.left.end() )

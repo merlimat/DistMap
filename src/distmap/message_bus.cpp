@@ -28,7 +28,7 @@ void MessageBus::send( const std::string& node,
                        const SendCallback& callback )
 {
     tcp::endpoint endpoint = getEndpointAddress( node );
-    ClientConnectionPtr cnx = getConnection( node );
+    auto cnx = getConnection( node );
     if ( cnx->socket().is_open() )
         cnx->send( msg, callback );
     else
@@ -41,7 +41,7 @@ void MessageBus::sendAndReceive( const std::string& node,
                                  const SendReceiveCallback& callback )
 {
     tcp::endpoint endpoint = getEndpointAddress( node );
-    ClientConnectionPtr cnx = getConnection( node );
+    auto cnx = getConnection( node );
 
     if ( cnx->socket().is_open() )
         cnx->sendAndReceive( msg, callback );

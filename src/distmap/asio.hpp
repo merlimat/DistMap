@@ -71,7 +71,7 @@ class IntrusivePoolBase
     Pool* m_pool;
 
 public:
-    IntrusivePoolBase( Pool* pool ) :
+    explicit IntrusivePoolBase( Pool* pool ) :
         m_counter( 0 ), m_pool( pool )
     {
     }

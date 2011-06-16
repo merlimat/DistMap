@@ -9,7 +9,8 @@
 #define HASH_HPP_
 
 #include <stdint.h>
+#include <string>
 
-uint64_t StringHash( const char *str, uint32_t len );
+uint64_t StringHash( const std::string& str );
 
 #endif /* HASH_HPP_ */

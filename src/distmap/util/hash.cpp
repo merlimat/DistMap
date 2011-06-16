@@ -11,11 +11,11 @@
 
 #include <stdio.h>
 
-uint64_t StringHash( const char *str, uint32_t len )
+uint64_t StringHash( const std::string& str )
 {
     md5_state_t state;
     md5_init( &state );
-    md5_append( &state, (const uint8_t*) str, len );
+    md5_append( &state, (const uint8_t*) str.c_str(), str.length() );
 
     uint8_t buffer[16];
     md5_finish( &state, buffer );
