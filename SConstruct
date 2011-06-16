@@ -8,6 +8,8 @@ CacheDir( 'build_cache' )
 debug = int( ARGUMENTS.get('debug', 0) )
 env = Environment( ENV=os.environ )
 
+env.Decider('MD5-timestamp')
+
 env.Replace( CXX = '/usr/local/bin/g++-4.6' )
 env.Append( CPPPATH = ['src', 'include', 'src/boost'] )
 env.Append( CXXFLAGS = ' --std=c++0x -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wno-strict-aliasing' )
